@@ -2,10 +2,30 @@ use proc_macro2::TokenStream;
 use quote::format_ident;
 use syn::{Expr, ItemFn};
 
-pub fn create_command(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let func: ItemFn = syn::parse2(item).expect("failed to parse function");
+pub fn create_command(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut func: ItemFn = syn::parse2(item).expect("failed to parse function");
 
-    let func_name = format_ident!("command_{}", func.sig.ident);
+    let ok_type = match &func.sig.output {
+        syn::ReturnType::Type(_, ty) => match **ty {
+            syn::Type::Path(ref path) => {
+                let segments = &path.path.segments;
+                match segments[0].arguments {
+                    syn::PathArguments::AngleBracketed(ref args) => match args.args.first() {
+                        Some(syn::GenericArgument::Type(ref ty)) => Some(ty.clone()),
+                        _ => None,
+                    },
+                    _ => None,
+                }
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+    .expect("failed to parse return type");
+
+    let func_name = func.sig.ident.clone();
+    let old_func_name = format_ident!("_{}", func.sig.ident);
+    func.sig.ident = old_func_name.clone();
     let func_params = func.sig.inputs.clone();
     let func_call_params = func
         .sig
@@ -16,18 +36,15 @@ pub fn create_command(attr: TokenStream, item: TokenStream) -> TokenStream {
             _ => panic!("unsupported function argument type"),
         })
         .collect::<Vec<_>>();
-    let func_path = func.sig.ident.clone();
-
-    let return_type: Expr = syn::parse2(attr).expect("failed to parse return type");
 
     let output = quote::quote! {
         #func
 
         #[tauri::command]
         #[specta::specta]
-        pub async fn #func_name(#func_params) -> std::result::Result<#return_type, String> {
-            let result = #func_path(#(#func_call_params),*).await;
-            result.map_err(|e| e.to_string())
+        pub async fn #func_name(#func_params) -> std::result::Result<#ok_type, String> {
+            let result = #old_func_name(#(#func_call_params),*).await;
+            result.map_err(|e| format!("{:#}", e))
         }
     };
 
@@ -37,6 +54,7 @@ pub fn create_command(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     #[test]
     fn test_create_command() {
         let input_fn = quote::quote! {
@@ -44,18 +62,17 @@ mod tests {
                 Ok(())
             }
         };
-        let input_type = quote::quote! { () };
-        let output = create_command(input_type, input_fn);
+        let output = create_command(TokenStream::new(), input_fn);
         let expected = quote::quote! {
-            pub async fn test_command(state: State<'_>, path: &str) -> Result<()> {
+            pub async fn _test_command(state: State<'_>, path: &str) -> Result<()> {
                 Ok(())
             }
 
-            #[specta::specta]
             #[tauri::command]
-            pub async fn command_test_command(state: State<'_>, path: &str) -> std::result::Result<(), String> {
-                let result = test_command().await;
-                result.map_err(|e| e.to_string())
+            #[specta::specta]
+            pub async fn test_command(state: State<'_>, path: &str) -> std::result::Result<(), String> {
+                let result = _test_command(state, path).await;
+                result.map_err(|e| format!("{:#}", e))
             }
         };
         assert_eq!(output.to_string(), expected.to_string());

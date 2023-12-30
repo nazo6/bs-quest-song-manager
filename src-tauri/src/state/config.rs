@@ -1,42 +1,36 @@
 use eyre::Result;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf, sync::RwLock};
+use std::path::PathBuf;
 
 static CONFIG_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    dirs::config_dir()
+    let path = dirs::config_dir()
         .unwrap()
         .join("bs-quest-mod-manager")
-        .join("config.json")
-});
-static HASH_CASH: Lazy<PathBuf> = Lazy::new(|| {
-    dirs::config_dir()
-        .unwrap()
-        .join("bs-quest-mod-manager")
-        .join("hash_cache.json")
+        .join("config.json");
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    path
 });
 
-#[derive(Serialize, Deserialize)]
-pub(crate) struct AppState {
+#[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
+pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber
-    pub mod_root: RwLock<Option<PathBuf>>,
+    pub mod_root: Option<PathBuf>,
     // Whether to cache hash of songs
-    pub hash_cache_enabled: RwLock<bool>,
-    pub hash_cache: RwLock<HashMap<String, String>>,
+    pub hash_cache_enabled: bool,
 }
 
-impl Default for AppState {
+impl Default for Config {
     fn default() -> Self {
         Self {
-            mod_root: RwLock::new(None),
-            hash_cache_enabled: RwLock::new(true),
-            hash_cache: RwLock::new(HashMap::new()),
+            mod_root: None,
+            hash_cache_enabled: true,
         }
     }
 }
 
-impl AppState {
+impl Config {
     pub async fn read_from_file() -> Result<Self> {
         let text = tokio::fs::read_to_string(CONFIG_PATH.as_path()).await?;
         let state = serde_json::from_str(&text)?;
@@ -48,5 +42,3 @@ impl AppState {
         Ok(())
     }
 }
-
-pub(crate) type State<'a> = tauri::State<'a, AppState>;

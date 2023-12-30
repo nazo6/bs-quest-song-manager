@@ -7,7 +7,10 @@
     "enabled": true,
     "rules": {
       "recommended": true
-    }
+    },
+    "ignore": [
+      "**/bindings.ts"
+    ]
   },
   "formatter": {
     "indentStyle": "space"
