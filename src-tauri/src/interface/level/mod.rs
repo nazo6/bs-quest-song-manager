@@ -3,13 +3,13 @@ mod r#impl;
 
 /// Struct to represent level.
 /// Contains info of all difficulties.
-#[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
+#[derive(Debug, Serialize, Deserialize, rspc::Type, Clone)]
 pub struct Level {
     pub hash: String,
     pub info: LevelInfo,
 }
 
-#[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, rspc::Type, Clone)]
 pub struct LevelInfo {
     #[serde(rename = "_songName")]
     pub song_name: String,
@@ -21,13 +21,13 @@ pub struct LevelInfo {
     pub difficulty_beatmap_sets: Vec<BeatMapSet>,
 }
 
-#[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, rspc::Type, Clone)]
 pub struct BeatMapSet {
     #[serde(rename = "_difficultyBeatmaps")]
     pub difficulty_beatmaps: Vec<BeatMap>,
 }
 
-#[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, rspc::Type, Clone)]
 pub struct BeatMap {
     #[serde(rename = "_difficulty")]
     pub difficulty: String,

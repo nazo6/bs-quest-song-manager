@@ -9,8 +9,12 @@ use super::Level;
 
 impl Level {
     pub async fn load(level_dir: &Path) -> Result<Self> {
-        let info_str = tokio::fs::read_to_string(level_dir.join("Info.dat")).await?;
-        let info: LevelInfo = serde_json::from_str(&info_str)?;
+        let info_path = level_dir.join("Info.dat");
+        let info_str = tokio::fs::read_to_string(&info_path)
+            .await
+            .wrap_err_with(|| format!("Failed to read info.dat at {:?}", info_path))?;
+        let info: LevelInfo =
+            serde_json::from_str(&info_str).wrap_err("Failed to parse info.dat")?;
         let difficulty_files = info
             .difficulty_beatmap_sets
             .iter()

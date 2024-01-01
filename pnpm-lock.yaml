@@ -17,21 +17,42 @@ dependencies:
   '@mantine/notifications':
     specifier: ^7.3.2
     version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
+  '@rspc/client':
+    specifier: ^0.1.3
+    version: 0.1.3
+  '@rspc/react':
+    specifier: ^0.1.3
+    version: 0.1.3(@tanstack/react-query@4.36.1)(react@18.2.0)
+  '@rspc/tauri':
+    specifier: ^0.1.3
+    version: 0.1.3(@tauri-apps/api@1.5.3)
+  '@tanstack/react-query':
+    specifier: ^4.35.3
+    version: 4.36.1(react-dom@18.2.0)(react@18.2.0)
+  '@tanstack/react-query-devtools':
+    specifier: ^5.15.5
+    version: 5.15.5(@tanstack/react-query@4.36.1)(react@18.2.0)
   '@tauri-apps/api':
     specifier: ^1.5.2
     version: 1.5.3
+  clsx:
+    specifier: ^2.1.0
+    version: 2.1.0
   immer:
     specifier: ^10.0.3
     version: 10.0.3
+  mantine-datatable:
+    specifier: ^7.3.5
+    version: 7.3.5(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(clsx@2.1.0)(react@18.2.0)
   react:
     specifier: ^18.2.0
     version: 18.2.0
   react-dom:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
-  swr:
-    specifier: ^2.2.4
-    version: 2.2.4(react@18.2.0)
+  react-resizable-panels:
+    specifier: ^1.0.6
+    version: 1.0.6(react-dom@18.2.0)(react@18.2.0)
 
 devDependencies:
   '@biomejs/biome':
@@ -881,6 +902,67 @@ packages:
     dev: true
     optional: true
 
+  /@rspc/client@0.1.3:
+    resolution: {integrity: sha512-3rsnmqm5G9fwtfV0HNPj4a70YTHUiw+hhC8RpyMPwOxn6pubCCVVbt58EN+eNaUICqs6DUAT/06SBNwVTRkkLg==}
+    dev: false
+
+  /@rspc/react@0.1.3(@tanstack/react-query@4.36.1)(react@18.2.0):
+    resolution: {integrity: sha512-JqdsM99QMZTTfrQHqhMAF98Qeuhym8G7DtABfb8F7a9iRjwGiF1eFqWtra3N85BOzr9vurbfwz7TmiTvg5HR7A==}
+    peerDependencies:
+      '@tanstack/react-query': ^4.26.0
+      react: ^18.0.0
+    dependencies:
+      '@rspc/client': 0.1.3
+      '@tanstack/react-query': 4.36.1(react-dom@18.2.0)(react@18.2.0)
+      react: 18.2.0
+    dev: false
+
+  /@rspc/tauri@0.1.3(@tauri-apps/api@1.5.3):
+    resolution: {integrity: sha512-4IFpZEU0LSZhmazUmxqvPSFvs3lJ4JuY/L9ClCBP4OUyzfQG36IuiYqQSBHZNABAi6XPTRv9+7SVqxj2+zOF0Q==}
+    peerDependencies:
+      '@tauri-apps/api': ^1.2.0
+    dependencies:
+      '@rspc/client': 0.1.3
+      '@tauri-apps/api': 1.5.3
+    dev: false
+
+  /@tanstack/query-core@4.36.1:
+    resolution: {integrity: sha512-DJSilV5+ytBP1FbFcEJovv4rnnm/CokuVvrBEtW/Va9DvuJ3HksbXUJEpI0aV1KtuL4ZoO9AVE6PyNLzF7tLeA==}
+    dev: false
+
+  /@tanstack/query-devtools@5.15.0:
+    resolution: {integrity: sha512-oz+xBIf+fanmAQ3CZrV4t+1VZiK2nyTcH3zY3G8ukzw+LwX2QGa04ZfF+OCOVF6tPZ2dn1cekMibUb4tevf/aw==}
+    dev: false
+
+  /@tanstack/react-query-devtools@5.15.5(@tanstack/react-query@4.36.1)(react@18.2.0):
+    resolution: {integrity: sha512-AixLsTYGB52Ou7snhbW4QlTHZ347VJOl+wjXqiLlK9/oENxpaVI92Nl4VIsGiVRrscwv5lRMYUGucM+UYShyEQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.15.5
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-devtools': 5.15.0
+      '@tanstack/react-query': 4.36.1(react-dom@18.2.0)(react@18.2.0)
+      react: 18.2.0
+    dev: false
+
+  /@tanstack/react-query@4.36.1(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-y7ySVHFyyQblPl3J3eQBWpXZkliroki3ARnBKsdJchlgt7yJLRDUcf4B8soufgiYt3pEQIkBWBx1N9/ZPIeUWw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+    dependencies:
+      '@tanstack/query-core': 4.36.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      use-sync-external-store: 1.2.0(react@18.2.0)
+    dev: false
+
   /@tauri-apps/api@1.5.3:
     resolution: {integrity: sha512-zxnDjHHKjOsrIzZm6nO5Xapb/BxqUq1tc7cGkFXsFkGTsSWgCPH1D8mm0XS9weJY2OaR73I3k3S+b7eSzJDfqA==}
     engines: {node: '>= 14.6.0', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
@@ -1191,12 +1273,13 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /client-only@0.0.1:
-    resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
-    dev: false
-
   /clsx@2.0.0:
     resolution: {integrity: sha512-rQ1+kcj+ttHG0MKVGBUXwayCCF1oh39BF5COIpRzuCEv8Mwjv0XucrI2ExNTOn9IlLifGClWQcU9BrZORvtw6Q==}
+    engines: {node: '>=6'}
+    dev: false
+
+  /clsx@2.1.0:
+    resolution: {integrity: sha512-m3iNNWpd9rl3jvvcBnu70ylMdrXt8Vlq4HYadnU5fwcOtvkSQWPmj7amUcDT2qYI7risszBjI5AUIUox9D16pg==}
     engines: {node: '>=6'}
     dev: false
 
@@ -1556,6 +1639,20 @@ packages:
       yallist: 3.1.1
     dev: true
 
+  /mantine-datatable@7.3.5(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(clsx@2.1.0)(react@18.2.0):
+    resolution: {integrity: sha512-vaITOJJii/ojfbRsyZoXtgFcWIjtTr0ZWm59pVlgrJMuBSnJqBgPfEsU8jvAsXrWpuXfe//pTmwWm9a2uN/aTw==}
+    peerDependencies:
+      '@mantine/core': '>=7'
+      '@mantine/hooks': '>=7'
+      clsx: '>=2'
+      react: '>=18.2'
+    dependencies:
+      '@mantine/core': 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
+      '@mantine/hooks': 7.3.2(react@18.2.0)
+      clsx: 2.1.0
+      react: 18.2.0
+    dev: false
+
   /merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
@@ -1837,6 +1934,16 @@ packages:
       use-sidecar: 1.1.2(@types/react@18.2.46)(react@18.2.0)
     dev: false
 
+  /react-resizable-panels@1.0.6(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-yZQiOP/uW2nTSdESDUBlBkQ1NQjUABpRKfBqonUQnNYSur7qRDy3W2wEEmrEyUY+W3opshpMiHf45zngIduJ0g==}
+    peerDependencies:
+      react: ^16.14.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.14.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /react-style-singleton@2.2.1(@types/react@18.2.46)(react@18.2.0):
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
     engines: {node: '>=10'}
@@ -2046,16 +2153,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
     dev: true
-
-  /swr@2.2.4(react@18.2.0):
-    resolution: {integrity: sha512-njiZ/4RiIhoOlAaLYDqwz5qH/KZXVilRLvomrx83HjzCWTfa+InyfAjv05PSFxnmLzZkNO9ZfvgoqzAaEI4sGQ==}
-    peerDependencies:
-      react: ^16.11.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      client-only: 0.0.1
-      react: 18.2.0
-      use-sync-external-store: 1.2.0(react@18.2.0)
-    dev: false
 
   /tabbable@6.2.0:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}

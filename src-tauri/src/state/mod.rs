@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use eyre::Result;
 use tokio::sync::RwLock;
 
@@ -37,5 +35,3 @@ impl AppState {
         })
     }
 }
-
-pub(crate) type State<'a> = tauri::State<'a, Arc<AppState>>;

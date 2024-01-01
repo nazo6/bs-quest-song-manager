@@ -12,7 +12,7 @@ static CONFIG_PATH: Lazy<PathBuf> = Lazy::new(|| {
     path
 });
 
-#[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
+#[derive(Debug, Serialize, Deserialize, rspc::Type, Clone)]
 pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber
@@ -42,3 +42,4 @@ impl Config {
         Ok(())
     }
 }
+
