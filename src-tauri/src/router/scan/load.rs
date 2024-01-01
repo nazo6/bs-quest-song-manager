@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use eyre::{Context, Result};
+use futures::StreamExt;
 use tokio::sync::broadcast;
-use tracing::{debug, info};
 
 use crate::{
     interface::{level::Level, playlist::Playlist},
@@ -22,38 +22,50 @@ pub async fn load_levels(
         .wrap_err("Failed to read level dir")
         .into_bad_request()?;
 
-    let mut levels = Vec::new();
+    let mut level_folders = Vec::new();
     while let Ok(Some(entry)) = level_dirs.next_entry().await {
         if let Ok(file_type) = entry.file_type().await {
             if file_type.is_dir() {
-                let path = entry.path();
-                info!("Loading level from {:?}", path);
-                let level = Level::load_with_cache(&path, global_ctx.cache.clone()).await;
-
-                match level {
-                    Ok(level) => {
-                        log_sender
-                            .send(ScanEvent::Level(ScanResult::Success {
-                                path: path.to_string_lossy().to_string(),
-                            }))
-                            .unwrap();
-                        levels.push(level);
-                    }
-                    Err(e) => {
-                        dbg!(&e);
-                        log_sender
-                            .send(ScanEvent::Level(ScanResult::Failed {
-                                path: path.to_string_lossy().to_string(),
-                                reason: e.to_string(),
-                            }))
-                            .unwrap();
-                    }
-                };
-                info!("Loaded level from {:?}", path);
+                level_folders.push(entry.path());
             }
         }
     }
 
+    let level_get_futures = level_folders.into_iter().map(|path| {
+        let log_sender = log_sender.clone();
+        let global_ctx = global_ctx.clone();
+        async move {
+            let level = Level::load_with_cache(&path, global_ctx.cache.clone()).await;
+
+            match level {
+                Ok(level) => {
+                    log_sender
+                        .send(ScanEvent::Level(ScanResult::Success {
+                            path: path.to_string_lossy().to_string(),
+                        }))
+                        .unwrap();
+                    Some(level)
+                }
+                Err(e) => {
+                    log_sender
+                        .send(ScanEvent::Level(ScanResult::Failed {
+                            path: path.to_string_lossy().to_string(),
+                            reason: e.to_string(),
+                        }))
+                        .unwrap();
+                    None
+                }
+            }
+        }
+    });
+
+    let levels = futures::stream::iter(level_get_futures)
+        .buffer_unordered(10)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
     *global_ctx.levels.write().await = levels;
 
     Ok(())

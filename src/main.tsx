@@ -10,10 +10,18 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient } from "@tanstack/react-query";
 
 import "@mantine/core/styles.layer.css";
+import "@mantine/notifications/styles.css";
 import "mantine-datatable/styles.layer.css";
 import "./styles.css";
+import { Notifications } from "@mantine/notifications";
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // default: true
+    },
+  },
+});
 const client = createClient<Procedures>({
   transport: new TauriTransport(),
 });
@@ -25,6 +33,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <ReactQueryDevtools initialIsOpen={false} />
         <MantineProvider>
           <App />
+          <Notifications />
         </MantineProvider>
       </>
     </rspc.Provider>

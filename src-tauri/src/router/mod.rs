@@ -31,7 +31,8 @@ pub fn router() -> Router {
             "level.",
             Router::new()
                 .query("get_all", |t| t(level::get_all))
-                .mutation("clear", |t| t(level::clear)),
+                .mutation("clear", |t| t(level::clear))
+                .mutation("add_by_hash", |t| t(level::add_by_hash)),
         )
         .merge(
             "scan.",
@@ -56,9 +57,9 @@ trait IntoRspcResult<T> {
 
 impl<T> IntoRspcResult<T> for eyre::Result<T> {
     fn into_bad_request(self) -> Result<T, rspc::Error> {
-        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::BadRequest, e.to_string()))
+        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::BadRequest, format!("{:#}", e)))
     }
     fn into_internal_error(self) -> Result<T, rspc::Error> {
-        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::InternalServerError, e.to_string()))
+        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::InternalServerError, format!("{:#}", e)))
     }
 }

@@ -6,21 +6,26 @@ import { Scan } from "./Scan";
 import { Button, Title } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { PlaylistList } from "./PlaylistList";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LevelList } from "./LevelList";
 
 export function Home() {
-  const { data: levels } = rspc.useQuery(["level.get_all"]);
+  const { data: levels } = rspc.useQuery(["level.get_all"], {
+    onSettled: (d) => {
+      console.log("settle", d);
+    },
+  });
   const { data: playlists } = rspc.useQuery(["playlist.get_all"]);
+  const [scanned, setScanned] = useState(false);
 
-  return (
-    levels &&
-    playlists &&
-    (levels.length > 0 && playlists.length > 0 ? (
-      <HomeInner levels={levels} playlists={playlists} />
-    ) : (
-      <Scan />
-    ))
+  return levels && playlists && scanned ? (
+    <HomeInner levels={levels} playlists={playlists} />
+  ) : (
+    <Scan
+      completeScan={() => {
+        setScanned(true);
+      }}
+    />
   );
 }
 
@@ -41,29 +46,33 @@ function HomeInner({
     number | null | "noPlaylist"
   >(null);
 
-  const showLevels = selectedPlaylist
-    ? selectedPlaylist === "noPlaylist"
-      ? levels.filter((level) => {
-          const inPlaylist = playlists.some((playlist) =>
-            playlist.songs.some((song) => song.hash === level.hash),
-          );
-          return !inPlaylist;
-        })
-      : playlists[selectedPlaylist].songs.map((song) => {
-          const level = levels.find((level) => level.hash === song.hash);
-          if (!level) {
-            return {
-              hash: song.hash,
-              key: song.key ?? undefined,
-              info: {
-                _songName: song.songName,
-              },
-              unavailable: true,
-            } satisfies UnavailableLevel;
-          }
-          return level;
-        })
-    : levels;
+  const showLevels = useMemo(() => {
+    if (selectedPlaylist === null) return levels;
+
+    if (selectedPlaylist === "noPlaylist") {
+      return levels.filter((level) => {
+        const inPlaylist = playlists.some((playlist) =>
+          playlist.songs.some((song) => song.hash === level.hash),
+        );
+        return !inPlaylist;
+      });
+    }
+
+    return playlists[selectedPlaylist].songs.map((song) => {
+      const level = levels.find((level) => level.hash === song.hash);
+      if (!level) {
+        return {
+          hash: song.hash,
+          key: song.key ?? undefined,
+          info: {
+            _songName: song.songName,
+          },
+          unavailable: true,
+        } satisfies UnavailableLevel;
+      }
+      return level;
+    });
+  }, [levels, playlists, selectedPlaylist]);
 
   return (
     <div className="flex flex-col h-full">

@@ -1,12 +1,35 @@
 use std::sync::Arc;
 
+use tracing_subscriber::prelude::*;
+
+mod api;
+mod constant;
 mod interface;
 mod router;
 mod state;
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    #[cfg(debug_assertions)]
+    {
+        tracing_subscriber::registry()
+            // .with(console_subscriber::spawn())
+            .with(
+                tracing_subscriber::fmt::layer().with_filter(
+                    tracing_subscriber::filter::EnvFilter::builder()
+                        .with_default_directive(tracing::Level::INFO.into())
+                        .parse("")
+                        .unwrap(),
+                ),
+            )
+            .init();
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::INFO)
+            .init();
+    }
 
     let state = Arc::new(
         state::AppState::load()

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "start": "tauri dev",
+    "generate-beatsaver-client": "openapi-generator-cli generate -i https://api.beatsaver.com/docs/swagger.json -g rust -o ./src-tauri/beatsaver-api --skip-validate-spec --additional-properties=packageName=beatsaver-api,packageVersion=0.1.0"
   },
   "dependencies": {
     "@mantine/core": "^7.3.2",
@@ -23,12 +25,14 @@
     "clsx": "^2.1.0",
     "immer": "^10.0.3",
     "mantine-datatable": "^7.3.5",
+    "p-limit": "^5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^1.0.6"
   },
   "devDependencies": {
     "@biomejs/biome": "1.4.1-nightly.22dd4e1",
+    "@openapitools/openapi-generator-cli": "^2.7.0",
     "@tauri-apps/cli": "^1.5.8",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",

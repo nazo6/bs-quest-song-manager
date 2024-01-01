@@ -8,6 +8,7 @@ export type Procedures = {
     mutations: 
         { key: "config.reset", input: never, result: null } | 
         { key: "config.set", input: Config, result: null } | 
+        { key: "level.add_by_hash", input: string, result: Level } | 
         { key: "level.clear", input: never, result: null } | 
         { key: "playlist.clear", input: never, result: null } | 
         { key: "scan.start", input: never, result: null },
