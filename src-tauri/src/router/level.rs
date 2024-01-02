@@ -66,7 +66,7 @@ pub async fn level_add_by_hash(ctx: State<'_>, hash: String) -> Result<Level, St
         .join("Mods")
         .join("SongLoader")
         .join("CustomLevels")
-        .join(hash);
+        .join(&format!("bqsm-{}", hash));
 
     let extract_dir = tokio::task::spawn_blocking(move || {
         let res = zip_extensions::zip_extract(&download_path, &extract_dir);

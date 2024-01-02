@@ -1,7 +1,27 @@
-# Tauri + React + Typescript
+# bs-quest-song-manager [wip]
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+App to manage songs for the Beat Saber Quest.
 
-## Recommended IDE Setup
+**This app is very early in development and not usable yet.**
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Usage
+
+This app does not use adb. You have to mount android storage to pc.
+
+There are serveral ways to do it.
+
+1. Use [primitive-ftpd](https://github.com/wolpi/prim-ftpd)
+
+Install app to quest3 and mount sftp server to pc using something like rclone.
+
+2. Use sshd on termux
+
+Termux can also be used to mount android storage to pc using sftp.
+
+## Features
+
+- [x] Load playlist and songs
+- [x] Download missing songs in playlist
+- [ ] Add songs
+- [ ] Delete songs
+- [ ] Edit playlist
