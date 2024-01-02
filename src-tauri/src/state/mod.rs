@@ -1,5 +1,5 @@
 use eyre::Result;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Semaphore};
 
 use crate::interface::{level::Level, playlist::Playlist};
 
@@ -21,17 +21,26 @@ pub(crate) struct AppState {
     pub cache: opendal::Operator,
     pub playlists: RwLock<Vec<Playlist>>,
     pub levels: RwLock<Vec<Level>>,
+    pub scan_state: ScanState,
+}
+
+pub struct ScanState {
+    pub scan_permit: Semaphore,
 }
 
 impl AppState {
     pub async fn load() -> Result<Self> {
         let config = config::Config::read_from_file().await.unwrap_or_default();
         let cache_operator = cache::init_operator()?;
+
         Ok(Self {
             config: RwLock::new(config),
             cache: cache_operator,
             playlists: RwLock::new(Vec::new()),
             levels: RwLock::new(Vec::new()),
+            scan_state: ScanState {
+                scan_permit: Semaphore::new(1),
+            },
         })
     }
 }

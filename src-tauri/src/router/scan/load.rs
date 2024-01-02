@@ -2,25 +2,23 @@ use std::path::Path;
 
 use eyre::{Context, Result};
 use futures::StreamExt;
-use tokio::sync::broadcast;
+use tauri_specta::Event;
 
-use crate::{
-    interface::{level::Level, playlist::Playlist},
-    router::{Ctx, IntoRspcResult},
+use crate::interface::{
+    level::Level,
+    playlist::Playlist,
+    scan::{ScanEvent, ScanResult},
 };
-
-use super::{ScanEvent, ScanResult};
 
 pub async fn load_levels(
     root: &Path,
-    global_ctx: Ctx,
-    log_sender: broadcast::Sender<ScanEvent>,
-) -> Result<()> {
+    cache: opendal::Operator,
+    handle: tauri::AppHandle,
+) -> Result<Vec<Level>> {
     let levels_path = root.join("Mods").join("SongLoader").join("CustomLevels");
     let mut level_dirs = tokio::fs::read_dir(levels_path)
         .await
-        .wrap_err("Failed to read level dir")
-        .into_bad_request()?;
+        .wrap_err("Failed to read level dir")?;
 
     let mut level_folders = Vec::new();
     while let Ok(Some(entry)) = level_dirs.next_entry().await {
@@ -32,27 +30,27 @@ pub async fn load_levels(
     }
 
     let level_get_futures = level_folders.into_iter().map(|path| {
-        let log_sender = log_sender.clone();
-        let global_ctx = global_ctx.clone();
+        let cache = cache.clone();
+        let handle = handle.clone();
         async move {
-            let level = Level::load_with_cache(&path, global_ctx.cache.clone()).await;
+            let level = Level::load_with_cache(&path, cache).await;
 
             match level {
                 Ok(level) => {
-                    log_sender
-                        .send(ScanEvent::Level(ScanResult::Success {
-                            path: path.to_string_lossy().to_string(),
-                        }))
-                        .unwrap();
+                    ScanEvent::Level(ScanResult::Success {
+                        path: path.to_string_lossy().to_string(),
+                    })
+                    .emit_all(&handle)
+                    .unwrap();
                     Some(level)
                 }
                 Err(e) => {
-                    log_sender
-                        .send(ScanEvent::Level(ScanResult::Failed {
-                            path: path.to_string_lossy().to_string(),
-                            reason: e.to_string(),
-                        }))
-                        .unwrap();
+                    ScanEvent::Level(ScanResult::Failed {
+                        path: path.to_string_lossy().to_string(),
+                        reason: e.to_string(),
+                    })
+                    .emit_all(&handle)
+                    .unwrap();
                     None
                 }
             }
@@ -66,20 +64,14 @@ pub async fn load_levels(
         .into_iter()
         .flatten()
         .collect::<Vec<_>>();
-    *global_ctx.levels.write().await = levels;
 
-    Ok(())
+    Ok(levels)
 }
-pub async fn load_playlists(
-    root: &Path,
-    global_ctx: Ctx,
-    log_sender: broadcast::Sender<ScanEvent>,
-) -> Result<()> {
+pub async fn load_playlists(apphandle: tauri::AppHandle, root: &Path) -> Result<Vec<Playlist>> {
     let playlists_path = root.join("Mods").join("PlaylistManager").join("Playlists");
     let mut playlist_files = tokio::fs::read_dir(playlists_path)
         .await
-        .wrap_err("Failed to read playlist dir")
-        .into_bad_request()?;
+        .wrap_err("Failed to read playlist dir")?;
 
     let mut playlists = Vec::new();
 
@@ -89,26 +81,24 @@ pub async fn load_playlists(
                 match Playlist::from_path(&entry.path()).await {
                     Ok(playlist) => {
                         playlists.push(playlist);
-                        log_sender
-                            .send(ScanEvent::Playlist(ScanResult::Success {
-                                path: entry.path().to_string_lossy().to_string(),
-                            }))
-                            .unwrap();
+                        ScanEvent::Playlist(ScanResult::Success {
+                            path: entry.path().to_string_lossy().to_string(),
+                        })
+                        .emit_all(&apphandle)
+                        .unwrap();
                     }
                     Err(e) => {
-                        log_sender
-                            .send(ScanEvent::Playlist(ScanResult::Failed {
-                                path: entry.path().to_string_lossy().to_string(),
-                                reason: e.to_string(),
-                            }))
-                            .unwrap();
+                        ScanEvent::Playlist(ScanResult::Failed {
+                            path: entry.path().to_string_lossy().to_string(),
+                            reason: e.to_string(),
+                        })
+                        .emit_all(&apphandle)
+                        .unwrap();
                     }
                 }
             }
         }
     }
 
-    *global_ctx.playlists.write().await = playlists;
-
-    Ok(())
+    Ok(playlists)
 }

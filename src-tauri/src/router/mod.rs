@@ -1,65 +1,41 @@
-use std::sync::Arc;
+use tauri::{plugin::TauriPlugin, Wry};
 
-use rspc::Config;
-
-use crate::state::AppState;
+use crate::{interface::scan::ScanEvent, state::AppState};
 
 mod config;
 mod level;
 mod playlist;
 mod scan;
 
-pub type Ctx = Arc<AppState>;
+pub type State<'a> = tauri::State<'a, AppState>;
 
-type Router = rspc::Router<Ctx>;
-
-pub fn router() -> Router {
-    let router = Router::new();
+pub fn specta_plugin() -> TauriPlugin<Wry> {
+    let specta_builder = tauri_specta::ts::builder()
+        .commands(tauri_specta::collect_commands![
+            config::config_get,
+            config::config_set,
+            config::config_reset,
+            level::level_get_all,
+            level::level_clear,
+            level::level_add_by_hash,
+            playlist::playlist_get_all,
+            playlist::playlist_clear,
+            scan::scan_start,
+        ])
+        .events(tauri_specta::collect_events![ScanEvent]);
 
     #[cfg(debug_assertions)]
-    let router = router.config(Config::new().export_ts_bindings("../src/bindings.ts"));
+    let specta_builder = specta_builder.path("../src/bindings.ts");
 
-    router
-        .merge(
-            "config.",
-            Router::new()
-                .query("get", |t| t(config::get))
-                .mutation("set", |t| t(config::set))
-                .mutation("reset", |t| t(config::reset)),
-        )
-        .merge(
-            "level.",
-            Router::new()
-                .query("get_all", |t| t(level::get_all))
-                .mutation("clear", |t| t(level::clear))
-                .mutation("add_by_hash", |t| t(level::add_by_hash)),
-        )
-        .merge(
-            "scan.",
-            Router::new()
-                .middleware(|mw| mw.middleware(scan::ctx_middleware))
-                .mutation("start", |t| t(scan::start))
-                .subscription("log", |t| t(scan::log)),
-        )
-        .merge(
-            "playlist.",
-            Router::new()
-                .query("get_all", |t| t(playlist::get_all))
-                .mutation("clear", |t| t(playlist::clear)),
-        )
-        .build()
+    specta_builder.into_plugin()
 }
 
-trait IntoRspcResult<T> {
-    fn into_bad_request(self) -> Result<T, rspc::Error>;
-    fn into_internal_error(self) -> Result<T, rspc::Error>;
+trait IntoMsg<T> {
+    fn to_msg(self) -> Result<T, String>;
 }
 
-impl<T> IntoRspcResult<T> for eyre::Result<T> {
-    fn into_bad_request(self) -> Result<T, rspc::Error> {
-        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::BadRequest, format!("{:#}", e)))
-    }
-    fn into_internal_error(self) -> Result<T, rspc::Error> {
-        self.map_err(|e| rspc::Error::new(rspc::ErrorCode::InternalServerError, format!("{:#}", e)))
+impl<T> IntoMsg<T> for eyre::Result<T> {
+    fn to_msg(self) -> Result<T, String> {
+        self.map_err(|e| format!("{:#}", e))
     }
 }

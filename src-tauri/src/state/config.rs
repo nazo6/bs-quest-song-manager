@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::constant::CONFIG_FILE_PATH;
 
-#[derive(Debug, Serialize, Deserialize, rspc::Type, Clone)]
+#[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
 pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber

@@ -1,25 +1,24 @@
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-import { Level, Playlist } from "../bindings";
-import { rspc } from "../rspc";
 import { Scan } from "./Scan";
 import { Button, Title } from "@mantine/core";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlaylistList } from "./PlaylistList";
 import { useMemo, useState } from "react";
 import { LevelList } from "./LevelList";
+import { Level, Playlist, isSuccess, mutation, query } from "../typeUtils";
 
 export function Home() {
-  const { data: levels } = rspc.useQuery(["level.get_all"], {
-    onSettled: (d) => {
-      console.log("settle", d);
-    },
-  });
-  const { data: playlists } = rspc.useQuery(["playlist.get_all"]);
+  const { data: levels } = useQuery(query("levelGetAll"));
+  const { data: playlists } = useQuery(query("playlistGetAll"));
   const [scanned, setScanned] = useState(false);
 
   return levels && playlists && scanned ? (
-    <HomeInner levels={levels} playlists={playlists} />
+    isSuccess(levels) && isSuccess(playlists) ? (
+      <HomeInner levels={levels.data} playlists={playlists.data} />
+    ) : (
+      <div>error</div>
+    )
   ) : (
     <Scan
       completeScan={() => {
@@ -105,20 +104,20 @@ function HomeInner({
 export function DebugTool() {
   const queryClient = useQueryClient();
 
-  const { mutateAsync: clearLevel } = rspc.useMutation(["level.clear"]);
-  const { mutateAsync: clearPlaylist } = rspc.useMutation(["playlist.clear"]);
-  const { mutateAsync: resetConfig } = rspc.useMutation(["config.reset"]);
+  const { mutateAsync: clearLevel } = useMutation(mutation("levelClear"));
+  const { mutateAsync: clearPlaylist } = useMutation(mutation("playlistClear"));
+  const { mutateAsync: resetConfig } = useMutation(mutation("configReset"));
 
   const clear = async () => {
     await clearLevel(undefined);
     await clearPlaylist(undefined);
-    queryClient.invalidateQueries({ queryKey: ["level.get_all"] });
-    queryClient.invalidateQueries({ queryKey: ["playlist.get_all"] });
+    queryClient.invalidateQueries({ queryKey: ["levelGetAll"] });
+    queryClient.invalidateQueries({ queryKey: ["playlistGetAll"] });
   };
   const reset = async () => {
     await clear();
     await resetConfig(undefined);
-    queryClient.invalidateQueries({ queryKey: ["config.get"] });
+    queryClient.invalidateQueries({ queryKey: ["configGet"] });
   };
 
   return (

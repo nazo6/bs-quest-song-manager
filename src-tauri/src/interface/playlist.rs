@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, rspc::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Playlist {
     pub playlist_title: String,
@@ -14,7 +14,7 @@ pub struct Playlist {
     pub songs: Vec<Song>,
 }
 
-#[derive(Debug, Deserialize, Serialize, rspc::Type, Clone)]
+#[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Song {
     pub key: Option<String>,
@@ -46,3 +46,4 @@ mod test {
         let _ = Playlist::from_path(&level_path).await.unwrap();
     }
 }
+

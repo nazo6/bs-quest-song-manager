@@ -1,5 +1,5 @@
 import { DataTable } from "mantine-datatable";
-import { Playlist } from "../bindings";
+import { Playlist } from "../typeUtils";
 
 export function PlaylistList(props: {
   playlists: Playlist[];

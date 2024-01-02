@@ -1,21 +1,21 @@
 import { DataTable } from "mantine-datatable";
-import { Level } from "../bindings";
 import { UnavailableLevel } from "./Home";
 import { useState } from "react";
 import { Button } from "@mantine/core";
-import { rspc } from "../rspc";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
 import pLimit from "p-limit";
+import { commands } from "../bindings";
+import { Level, isSuccess } from "../typeUtils";
 
 export function LevelList(props: {
   levels: (Level | UnavailableLevel)[];
 }) {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
-  const { mutateAsync: addLevelByHash } = rspc.useMutation([
-    "level.add_by_hash",
-  ]);
+  const { mutateAsync: addLevelByHash } = useMutation({
+    mutationFn: commands.levelAddByHash,
+  });
   const queryClient = useQueryClient();
 
   return (
@@ -35,12 +35,20 @@ export function LevelList(props: {
             promises.push(
               limit(async () => {
                 const level = await addLevelByHash(l.hash);
-                await queryClient.invalidateQueries({
-                  queryKey: ["level.get_all"],
+                if (!isSuccess(level)) {
+                  notifications.show({
+                    title: "Failed to download level",
+                    message: `Failed to download level : ${level.error}`,
+                  });
+                  return;
+                }
+
+                queryClient.invalidateQueries({
+                  queryKey: ["levelGetAll"],
                 });
                 notifications.show({
                   title: "Added level",
-                  message: `Successfully downloaded and added level : ${level.info._songName}`,
+                  message: `Successfully downloaded and added level : ${level.data.info._songName}`,
                 });
               }),
             );
@@ -70,11 +78,15 @@ export function LevelList(props: {
                   <Button
                     onClick={async () => {
                       const level = await addLevelByHash(raw.hash);
-                      queryClient.invalidateQueries(["level.get_all"]);
-                      notifications.show({
-                        title: "Added level",
-                        message: `Successfully downloaded and added level. : ${level.info._songName}`,
-                      });
+                      if (isSuccess(level)) {
+                        queryClient.invalidateQueries({
+                          queryKey: ["levelGetAll"],
+                        });
+                        notifications.show({
+                          title: "Added level",
+                          message: `Successfully downloaded and added level. : ${level.data.info._songName}`,
+                        });
+                      }
                     }}
                   >
                     Download

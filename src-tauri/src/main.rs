@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use tracing_subscriber::prelude::*;
 
 mod api;
@@ -31,17 +29,13 @@ async fn main() {
             .init();
     }
 
-    let state = Arc::new(
-        state::AppState::load()
-            .await
-            .expect("error while loading application state"),
-    );
-
     tauri::Builder::default()
-        .plugin(rspc::integrations::tauri::plugin(
-            router::router().arced(),
-            move || state.clone(),
-        ))
+        .manage(
+            state::AppState::load()
+                .await
+                .expect("Failed to init state!"),
+        )
+        .plugin(router::specta_plugin())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,11 +1,16 @@
 use crate::interface::playlist::Playlist;
 
-use super::Ctx;
+use super::State;
 
-pub async fn get_all(ctx: Ctx, _: ()) -> Vec<Playlist> {
-    ctx.playlists.read().await.clone()
+#[tauri::command]
+#[specta::specta]
+pub async fn playlist_get_all(ctx: State<'_>) -> Result<Vec<Playlist>, String> {
+    Ok(ctx.playlists.read().await.clone())
 }
 
-pub async fn clear(ctx: Ctx, _: ()) {
+#[tauri::command]
+#[specta::specta]
+pub async fn playlist_clear(ctx: State<'_>) -> Result<(), String> {
     *ctx.playlists.write().await = Vec::new();
+    Ok(())
 }

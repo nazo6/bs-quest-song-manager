@@ -3,52 +3,57 @@ use tracing::info;
 
 use crate::{api, constant::TEMP_DIR, interface::level::Level};
 
-use super::{Ctx, IntoRspcResult};
+use super::{IntoMsg, State};
 
-pub async fn get_all(ctx: Ctx, _: ()) -> Vec<Level> {
+#[tauri::command]
+#[specta::specta]
+pub async fn level_get_all(ctx: State<'_>) -> Result<Vec<Level>, String> {
     info!("Getting all levels");
     let res = ctx.levels.read().await.clone();
     info!("Got all levels");
-    res
+    Ok(res)
 }
 
-pub async fn clear(ctx: Ctx, _: ()) {
+#[tauri::command]
+#[specta::specta]
+pub async fn level_clear(ctx: State<'_>) -> Result<(), String> {
     *ctx.levels.write().await = Vec::new();
+    Ok(())
 }
 
 #[tracing::instrument(skip(ctx), err)]
-pub async fn add_by_hash(ctx: Ctx, hash: String) -> Result<Level, rspc::Error> {
+#[tauri::command]
+#[specta::specta]
+pub async fn level_add_by_hash(ctx: State<'_>, hash: String) -> Result<Level, String> {
     info!("Adding level by hash: {}", hash);
 
-    let res = api::beatsaver::map::get_map_by_hash(&hash)
-        .await
-        .into_internal_error()?;
+    let res = api::beatsaver::map::get_map_by_hash(&hash).await.to_msg()?;
     let download_url = &res
         .versions
         .last()
         .ok_or_else(|| eyre::eyre!("No versions"))
-        .into_internal_error()?
+        .to_msg()?
         .download_url;
     let bytes = reqwest::get(download_url)
         .await
         .wrap_err("Failed to download map")
-        .into_internal_error()?
+        .to_msg()?
         .error_for_status()
         .wrap_err("Failed to download map")
-        .into_internal_error()?
+        .to_msg()?
         .bytes()
         .await
         .wrap_err("Failed to download map")
-        .into_internal_error()?;
+        .to_msg()?;
     let download_path = TEMP_DIR.join(format!("{}.zip", hash));
     let mut out = tokio::fs::File::create(&download_path)
         .await
         .wrap_err("Failed to create file")
-        .into_internal_error()?;
+        .to_msg()?;
     tokio::io::copy(&mut bytes.as_ref(), &mut out)
         .await
         .wrap_err("Failed to copy file")
-        .into_internal_error()?;
+        .to_msg()?;
 
     let extract_dir = ctx
         .config
@@ -57,7 +62,7 @@ pub async fn add_by_hash(ctx: Ctx, hash: String) -> Result<Level, rspc::Error> {
         .mod_root
         .clone()
         .ok_or_else(|| eyre::eyre!("Mod root is not set. Please set mod root in settings."))
-        .into_bad_request()?
+        .to_msg()?
         .join("Mods")
         .join("SongLoader")
         .join("CustomLevels")
@@ -73,11 +78,11 @@ pub async fn add_by_hash(ctx: Ctx, hash: String) -> Result<Level, rspc::Error> {
     .await
     .unwrap()
     .wrap_err("Failed to extract zip")
-    .into_internal_error()?;
+    .to_msg()?;
 
     let level = Level::load_with_cache(&extract_dir, ctx.cache.clone())
         .await
-        .into_internal_error()?;
+        .to_msg()?;
 
     ctx.levels.write().await.push(level.clone());
 

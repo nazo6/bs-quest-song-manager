@@ -1,17 +1,19 @@
 import { Button, Title } from "@mantine/core";
 import { open } from "@tauri-apps/api/dialog";
 import { useState } from "react";
-import { rspc } from "./rspc";
-import { Config } from "./bindings";
+import { Config, commands } from "./bindings";
 import { Home } from "./page/Home";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { isSuccess, query } from "./typeUtils";
 
 function App() {
-  const { data: config } = rspc.useQuery(["config.get"]);
+  const { data: config } = useQuery(query("configGet"));
 
   return (
     <div className="h-[100vh]">
-      {config && (config.mod_root ? <Home /> : <Welcome config={config} />)}
+      {config &&
+        isSuccess(config) &&
+        (config.data.mod_root ? <Home /> : <Welcome config={config.data} />)}
     </div>
   );
 }
@@ -20,9 +22,10 @@ function Welcome(props: { config: Config }) {
   const [rootDir, setRootDir] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { mutateAsync: setConfig } = rspc.useMutation(["config.set"], {
+  const { mutateAsync: setConfig } = useMutation({
+    mutationFn: commands.configSet,
     onSettled: async () => {
-      queryClient.invalidateQueries({ queryKey: ["config.get"] });
+      queryClient.invalidateQueries({ queryKey: ["configGet"] });
     },
   });
 

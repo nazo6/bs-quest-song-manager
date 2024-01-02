@@ -1,9 +1,10 @@
-import { useState } from "react";
 import { Button, Title } from "@mantine/core";
-import { rspc } from "../rspc";
-import { useQueryClient } from "@tanstack/react-query";
-import { DebugTool } from "./Home";
 import { notifications } from "@mantine/notifications";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { isSuccess, mutation, query } from "../typeUtils";
+import { DebugTool } from "./Home";
+import { events } from "../bindings";
 
 export function Scan(props: { completeScan: () => void }) {
   const [levelSuccessCount, setLevelSuccessCount] = useState(0);
@@ -18,45 +19,55 @@ export function Scan(props: { completeScan: () => void }) {
 
   const [scanning, setScanning] = useState(false);
 
-  const { data: config } = rspc.useQuery(["config.get"]);
+  const { data: config } = useQuery(query("configGet"));
 
   const queryClient = useQueryClient();
 
-  const { mutateAsync: startScan } = rspc.useMutation("scan.start", {
+  const { mutateAsync: startScan } = useMutation({
     onSettled: async () => {
-      queryClient.invalidateQueries({ queryKey: ["level.get_all"] });
-      queryClient.invalidateQueries({ queryKey: ["playlist.get_all"] });
+      queryClient.invalidateQueries({ queryKey: ["levelGetAll"] });
+      queryClient.invalidateQueries({ queryKey: ["playlistGetAll"] });
     },
+    ...mutation("scanStart"),
   });
 
-  rspc.useSubscription(["scan.log"], {
-    onData: (d) => {
-      if (typeof d === "string") {
-      } else if ("Level" in d) {
-        if ("Success" in d.Level) {
+  useEffect(() => {
+    const unsubscribe = events.scanEvent.listen((d) => {
+      const event = d.payload;
+      console.log(event);
+      if (typeof event === "string") {
+      } else if ("Level" in event) {
+        if ("Success" in event.Level) {
           setLevelSuccessCount((prev) => prev + 1);
         } else {
-          const text = `Level scan failed: ${d.Level.Failed.path} (${d.Level.Failed.reason})`;
+          const text = `Level scan failed: ${event.Level.Failed.path} (${event.Level.Failed.reason})`;
           setLog((p) => {
             return [...p, text];
           });
         }
       } else {
-        if ("Success" in d.Playlist) {
+        if ("Success" in event.Playlist) {
           setPlaylistSuccessCount((p) => p + 1);
         } else {
-          const text = `Playlist scan failed: ${d.Playlist.Failed.path} (${d.Playlist.Failed.reason})`;
+          const text = `Playlist scan failed: ${event.Playlist.Failed.path} (${event.Playlist.Failed.reason})`;
           setLog((p) => {
             return [...p, text];
           });
         }
       }
-    },
-  });
+    });
+    return () => {
+      (async () => {
+        (await unsubscribe)();
+      })();
+    };
+  }, []);
 
   return (
     <div>
-      <Title>Scan: {config?.mod_root ?? ""}</Title>
+      <Title>
+        Scan: {config && isSuccess(config) ? config.data.mod_root : ""}
+      </Title>
       <div className="flex">
         <Button
           onClick={async () => {

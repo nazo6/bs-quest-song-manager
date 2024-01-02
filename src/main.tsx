@@ -2,18 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { MantineProvider } from "@mantine/core";
-import { createClient } from "@rspc/client";
-import { TauriTransport } from "@rspc/tauri";
-import { rspc } from "./rspc";
-import { Procedures } from "./bindings";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Notifications } from "@mantine/notifications";
 
 import "@mantine/core/styles.layer.css";
 import "@mantine/notifications/styles.css";
 import "mantine-datatable/styles.layer.css";
 import "./styles.css";
-import { Notifications } from "@mantine/notifications";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,13 +18,10 @@ export const queryClient = new QueryClient({
     },
   },
 });
-const client = createClient<Procedures>({
-  transport: new TauriTransport(),
-});
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <rspc.Provider client={client} queryClient={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <>
         <ReactQueryDevtools initialIsOpen={false} />
         <MantineProvider>
@@ -36,6 +29,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Notifications />
         </MantineProvider>
       </>
-    </rspc.Provider>
+    </QueryClientProvider>
   </React.StrictMode>,
 );
