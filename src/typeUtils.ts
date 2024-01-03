@@ -31,6 +31,12 @@ export function query<T extends keyof typeof commands>(command: T) {
   };
 }
 
+export function queryKey<T extends keyof typeof commands>(command: T) {
+  return {
+    queryKey: [command],
+  };
+}
+
 export function mutation<T extends keyof typeof commands>(command: T) {
   return {
     mutationFn: commands[command],
