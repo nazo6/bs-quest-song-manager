@@ -1,32 +1,10 @@
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-import { Scan } from "./Scan";
-import { Button, Title } from "@mantine/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlaylistList } from "./PlaylistList";
 import { useMemo, useState } from "react";
 import { LevelList } from "./LevelList";
-import { Level, Playlist, isSuccess, mutation, query } from "../typeUtils";
-
-export function Home() {
-  const { data: levels } = useQuery(query("levelGetAll"));
-  const { data: playlists } = useQuery(query("playlistGetAll"));
-  const [scanned, setScanned] = useState(false);
-
-  return levels && playlists && scanned ? (
-    isSuccess(levels) && isSuccess(playlists) ? (
-      <HomeInner levels={levels.data} playlists={playlists.data} />
-    ) : (
-      <div>error</div>
-    )
-  ) : (
-    <Scan
-      completeScan={() => {
-        setScanned(true);
-      }}
-    />
-  );
-}
+import { Level, Playlist } from "../typeUtils";
+import { Topbar } from "./Topbar";
 
 export type UnavailableLevel = {
   hash: string;
@@ -37,13 +15,19 @@ export type UnavailableLevel = {
   unavailable: true;
 };
 
-function HomeInner({
+export function Home({
   levels,
   playlists,
 }: { levels: Level[]; playlists: Playlist[] }) {
   const [selectedPlaylist, setSelectedPlaylist] = useState<
     number | null | "noPlaylist"
   >(null);
+  const currentPlaylist = useMemo(() => {
+    if (typeof selectedPlaylist === "number") {
+      return playlists[selectedPlaylist];
+    }
+    return selectedPlaylist;
+  }, [selectedPlaylist, playlists]);
 
   const showLevels = useMemo(() => {
     if (selectedPlaylist === null) return levels;
@@ -75,8 +59,7 @@ function HomeInner({
 
   return (
     <div className="flex flex-col h-full">
-      <Title order={1}>Home</Title>
-      <DebugTool />
+      <Topbar />
       <PanelGroup
         direction="horizontal"
         className="flex-grow"
@@ -94,36 +77,9 @@ function HomeInner({
         </Panel>
         <PanelResizeHandle className="px-[1px] bg-black" />
         <Panel>
-          <LevelList levels={showLevels} />
+          <LevelList levels={showLevels} playlist={currentPlaylist} />
         </Panel>
       </PanelGroup>
-    </div>
-  );
-}
-
-export function DebugTool() {
-  const queryClient = useQueryClient();
-
-  const { mutateAsync: clearLevel } = useMutation(mutation("levelClear"));
-  const { mutateAsync: clearPlaylist } = useMutation(mutation("playlistClear"));
-  const { mutateAsync: resetConfig } = useMutation(mutation("configReset"));
-
-  const clear = async () => {
-    await clearLevel(undefined);
-    await clearPlaylist(undefined);
-    queryClient.invalidateQueries({ queryKey: ["levelGetAll"] });
-    queryClient.invalidateQueries({ queryKey: ["playlistGetAll"] });
-  };
-  const reset = async () => {
-    await clear();
-    await resetConfig(undefined);
-    queryClient.invalidateQueries({ queryKey: ["configGet"] });
-  };
-
-  return (
-    <div>
-      <Button onClick={clear}>Reset scan data</Button>
-      <Button onClick={reset}>Reset config</Button>
     </div>
   );
 }

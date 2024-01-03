@@ -10,9 +10,11 @@ pub async fn config_get(state: State<'_>) -> Result<Config, String> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn config_set(state: State<'_>, config: Config) -> Result<(), String> {
-    *state.config.write().await = config;
+pub async fn config_set_mod_root(state: State<'_>, mod_root: String) -> Result<(), String> {
+    state.config.write().await.mod_root = Some(mod_root.into());
     state.config.read().await.write_to_file().await.to_msg()?;
+    state.levels.write().await.clear();
+    state.playlists.write().await.clear();
     Ok(())
 }
 

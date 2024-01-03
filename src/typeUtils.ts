@@ -10,6 +10,11 @@ export type Playlist = Extract<
   { status: "ok" }
 >["data"][number];
 
+export type Config = Extract<
+  Awaited<ReturnType<typeof commands.configGet>>,
+  { status: "ok" }
+>["data"];
+
 type __Result__<T, E> =
   | { status: "ok"; data: T }
   | { status: "error"; error: E };

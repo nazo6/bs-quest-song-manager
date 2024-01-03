@@ -15,7 +15,7 @@ async fn main() {
             .with(
                 tracing_subscriber::fmt::layer().with_filter(
                     tracing_subscriber::filter::EnvFilter::builder()
-                        .with_default_directive(tracing::Level::INFO.into())
+                        .with_default_directive(tracing::Level::DEBUG.into())
                         .parse("")
                         .unwrap(),
                 ),

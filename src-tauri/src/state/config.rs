@@ -4,22 +4,11 @@ use std::path::PathBuf;
 
 use crate::constant::CONFIG_FILE_PATH;
 
-#[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
+#[derive(Debug, Serialize, Deserialize, specta::Type, Clone, Default)]
 pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber
     pub mod_root: Option<PathBuf>,
-    // Whether to cache hash of songs
-    pub hash_cache_enabled: bool,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            mod_root: None,
-            hash_cache_enabled: true,
-        }
-    }
 }
 
 impl Config {
