@@ -9,17 +9,17 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async configSetModRoot(modRoot: string) : Promise<__Result__<null, string>> {
+async configReset() : Promise<__Result__<null, string>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|config_set_mod_root", { modRoot }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|config_reset") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async configReset() : Promise<__Result__<null, string>> {
+async configSetModRoot(modRoot: string) : Promise<__Result__<null, string>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|config_reset") };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|config_set_mod_root", { modRoot }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

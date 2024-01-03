@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use once_cell::sync::Lazy;
 
 pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let path = dirs::config_dir()
+    let path = dirs::data_local_dir()
         .unwrap()
         .join("bs-quest-mod-manager")
         .join("config.json");
@@ -12,7 +12,7 @@ pub static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 pub static TEMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = dirs::cache_dir()
+    let path = dirs::data_local_dir()
         .unwrap()
         .join("bs-quest-mod-manager")
         .join("temp");
@@ -21,7 +21,7 @@ pub static TEMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
 });
 
 pub static CACHE_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = dirs::cache_dir()
+    let path = dirs::data_local_dir()
         .unwrap()
         .join("bs-quest-mod-manager")
         .join("cache");

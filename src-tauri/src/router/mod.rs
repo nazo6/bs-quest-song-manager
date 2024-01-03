@@ -13,8 +13,8 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
     let specta_builder = tauri_specta::ts::builder()
         .commands(tauri_specta::collect_commands![
             config::config_get,
-            config::config_set_mod_root,
             config::config_reset,
+            config::config_set_mod_root,
             level::level_get_all,
             level::level_clear,
             level::level_add_by_hash,
