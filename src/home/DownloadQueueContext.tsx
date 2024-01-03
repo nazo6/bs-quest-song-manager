@@ -1,6 +1,8 @@
 import { ReactNode, createContext, useContext, useState } from "react";
 
 export type DownloadQueueContextType = {
+  completed: string[];
+  processing: string[];
   queue: string[];
   add: (hash: string) => void;
 };
@@ -11,10 +13,14 @@ const DownloadQueueContext = createContext<DownloadQueueContextType | null>(
 
 export const DownloadQueueProvider = (props: { children: ReactNode }) => {
   const [queue, setQueue] = useState<string[]>([]);
+  const [processing, setProcessing] = useState<string[]>([]);
+  const [completed, setCompleted] = useState<string[]>([]);
 
   return (
     <DownloadQueueContext.Provider
       value={{
+        completed,
+        processing,
         queue,
         add: (hash: string) => {
           setQueue([...queue, hash]);

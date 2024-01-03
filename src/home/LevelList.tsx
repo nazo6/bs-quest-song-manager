@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActionIcon, Button, Table, Title } from "@mantine/core";
 import { Song } from "../bindings";
 import { Level, Playlist } from "../typeUtils";
@@ -144,14 +144,16 @@ export function LevelList(props: {
           />
           <Table>
             <Table.Tbody>
-              {level ? (
+              <Table.Tr>
+                <Table.Td>Title</Table.Td>
+                <Table.Td>
+                  <Title order={4}>
+                    {level ? level.info._songName : row.original.song.songName}
+                  </Title>
+                </Table.Td>
+              </Table.Tr>
+              {level && (
                 <>
-                  <Table.Tr>
-                    <Table.Td>Title</Table.Td>
-                    <Table.Td>
-                      <Title order={4}>{level.info._songName}</Title>
-                    </Table.Td>
-                  </Table.Tr>
                   <Table.Tr>
                     <Table.Td>Author</Table.Td>
                     <Table.Td>{level.info._songAuthorName}</Table.Td>
@@ -161,12 +163,11 @@ export function LevelList(props: {
                     <Table.Td>{level.info._songSubName}</Table.Td>
                   </Table.Tr>
                 </>
-              ) : (
-                <Table.Tr>
-                  <Table.Td>Title</Table.Td>
-                  <Table.Td>{row.original.song.songName}</Table.Td>
-                </Table.Tr>
               )}
+              <Table.Tr>
+                <Table.Td>hash</Table.Td>
+                <Table.Td>{row.original.song.hash}</Table.Td>
+              </Table.Tr>
             </Table.Tbody>
           </Table>
         </div>
@@ -181,6 +182,11 @@ export function LevelList(props: {
       };
     },
   });
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    table.resetExpanded();
+  }, [props.playlist]);
 
   return (
     <div className="h-full [&:first-child]:bg-red-500/20 ">
