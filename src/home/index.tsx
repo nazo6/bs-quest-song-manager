@@ -6,56 +6,49 @@ import { LevelList } from "./LevelList";
 import { Level, Playlist } from "../typeUtils";
 import { Topbar } from "./Topbar";
 
-export type MissingLevel = {
-  hash: string;
-  info: {
-    _songName: string;
-  };
-  key?: string;
-  missing: true;
-};
-
 export function Home({
   levels,
   playlists,
 }: { levels: Level[]; playlists: Playlist[] }) {
+  const levelsMap = useMemo(() => {
+    const map: Record<string, Level> = {};
+    for (const level of levels) {
+      if (!(level.hash in map)) {
+        map[level.hash] = level;
+      }
+    }
+    return map;
+  }, [levels]);
+
+  /// Playlist of levels that are not in any playlist
+  const noPlaylist: Playlist = useMemo(() => {
+    const hashs = new Set(Object.keys(levelsMap));
+    for (const playlist of playlists) {
+      for (const song of playlist.songs) {
+        hashs.delete(song.hash);
+      }
+    }
+
+    return {
+      playlistTitle: "Level not in any playlist",
+      songs: Array.from(hashs).map((hash) => {
+        const level = levelsMap[hash]!;
+        return {
+          hash,
+          key: null,
+          songName: level.info._songName,
+        };
+      }),
+      imageString: null,
+      image: null,
+      playlistAuthor: null,
+      playlistDescription: null,
+    };
+  }, [levelsMap, playlists]);
+
   const [selectedPlaylist, setSelectedPlaylist] = useState<
     number | null | "noPlaylist"
   >(null);
-  const currentPlaylist = useMemo(() => {
-    if (typeof selectedPlaylist === "number") {
-      return playlists[selectedPlaylist];
-    }
-    return selectedPlaylist;
-  }, [selectedPlaylist, playlists]);
-
-  const showLevels = useMemo(() => {
-    if (selectedPlaylist === null) return levels;
-
-    if (selectedPlaylist === "noPlaylist") {
-      return levels.filter((level) => {
-        const inPlaylist = playlists.some((playlist) =>
-          playlist.songs.some((song) => song.hash === level.hash),
-        );
-        return !inPlaylist;
-      });
-    }
-
-    return (playlists[selectedPlaylist]?.songs ?? []).map((song) => {
-      const level = levels.find((level) => level.hash === song.hash);
-      if (!level) {
-        return {
-          hash: song.hash,
-          key: song.key ?? undefined,
-          info: {
-            _songName: song.songName,
-          },
-          missing: true,
-        } satisfies MissingLevel;
-      }
-      return level;
-    });
-  }, [levels, playlists, selectedPlaylist]);
 
   return (
     <div className="flex flex-col h-full">
@@ -77,7 +70,17 @@ export function Home({
         </Panel>
         <PanelResizeHandle className="w-[5px] bg-gray-500/80" />
         <Panel>
-          <LevelList levels={showLevels} playlist={currentPlaylist} />
+          <LevelList
+            levels={levels}
+            levelsMap={levelsMap}
+            playlist={
+              selectedPlaylist === "noPlaylist"
+                ? noPlaylist
+                : selectedPlaylist
+                  ? playlists[selectedPlaylist] ?? null
+                  : null
+            }
+          />
         </Panel>
       </PanelGroup>
     </div>

@@ -25,7 +25,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async levelGetAll() : Promise<__Result__<{ hash: string; info: LevelInfo }[], string>> {
+async levelGetAll() : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo }[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_get_all") };
 } catch (e) {
@@ -41,7 +41,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; info: LevelInfo }, string>> {
+async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_hash", { hash }) };
 } catch (e) {
@@ -85,7 +85,7 @@ scanEvent: "plugin:tauri-specta:scan-event"
 
 export type BeatMap = { _difficulty: string; _difficultyRank: number; _beatmapFilename: string }
 export type BeatMapSet = { _difficultyBeatmaps: BeatMap[] }
-export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[] }
+export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[]; _coverImageFilename: string }
 export type ScanEvent = { Level: ScanResult } | { Playlist: ScanResult } | "Completed" | "Started"
 export type ScanResult = { Success: { path: string } } | { Failed: { reason: string; path: string } }
 export type Song = { key: string | null; hash: string; songName: string }

@@ -30,6 +30,8 @@ export function Topbar() {
       autoClose: false,
       loading: true,
     });
+    let playlistCount = 0;
+    let levelCount = 0;
     const unsubscribe = await events.scanEvent.listen((d) => {
       const event = d.payload;
       if (typeof event === "string") {
@@ -43,6 +45,7 @@ export function Topbar() {
             success: true,
             type: "level",
           };
+          levelCount++;
         } else {
           log = {
             path: event.Level.Failed.path,
@@ -58,6 +61,7 @@ export function Topbar() {
             success: true,
             type: "level",
           };
+          playlistCount++;
         } else {
           log = {
             path: event.Playlist.Failed.path,
@@ -81,7 +85,7 @@ export function Topbar() {
         id,
         autoClose: true,
         loading: false,
-        message: "Scan completed",
+        message: `Scan completed: ${levelCount} levels, ${playlistCount} playlists`,
       });
       queryClient.invalidateQueries({ queryKey: ["levelGetAll"] });
       queryClient.invalidateQueries({ queryKey: ["playlistGetAll"] });

@@ -6,6 +6,7 @@ mod r#impl;
 #[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
 pub struct Level {
     pub hash: String,
+    pub image_string: String,
     pub info: LevelInfo,
 }
 
@@ -19,6 +20,8 @@ pub struct LevelInfo {
     pub song_author_name: String,
     #[serde(rename = "_difficultyBeatmapSets")]
     pub difficulty_beatmap_sets: Vec<BeatMapSet>,
+    #[serde(rename = "_coverImageFilename")]
+    pub cover_image_filename: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]

@@ -297,6 +297,7 @@ dependencies = [
 name = "bs-quest-song-manager"
 version = "0.0.0"
 dependencies = [
+ "base64 0.21.5",
  "console-subscriber",
  "dirs",
  "eyre",

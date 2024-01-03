@@ -45,6 +45,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
             <MRT_ToggleGlobalFilterButton table={table} />
             <MRT_ToggleFiltersButton table={table} />
             <MRT_ShowHideColumnsButton table={table} />
+            {/* There are no option to hide default GlobalFilterTextInput. So, we hide it with CSS. */}
             <div className="[&_.mrt-global-filter-text-input]:!block">
               <MRT_GlobalFilterTextInput table={table} />
             </div>
@@ -68,7 +69,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
     },
     mantineTableBodyRowProps: ({ staticRowIndex }) => {
       return {
-        className: clsx({
+        className: clsx("h-14", {
           "*:!bg-blue-500/20 *:mix-blend-multiply":
             staticRowIndex === opts.selected,
         }),
@@ -80,9 +81,6 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
           }
         },
       };
-    },
-    mantineTableBodyCellProps: {
-      className: "py-1",
     },
   });
 

@@ -21,7 +21,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "resolvePackageJsonExports": false
+    "resolvePackageJsonExports": false,
+    "noUncheckedIndexedAccess": true
   },
   "include": [
     "src"

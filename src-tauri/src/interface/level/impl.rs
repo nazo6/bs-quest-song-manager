@@ -1,3 +1,4 @@
+use base64::Engine;
 use eyre::{Context, ContextCompat, Result};
 use opendal::Operator;
 use sha1::{Digest, Sha1};
@@ -39,7 +40,20 @@ impl Level {
             format!("{:x}", hasher.finalize())
         };
 
-        Ok(Self { hash, info })
+        let image_string = {
+            let mut image_path = level_dir.to_owned();
+            image_path.push(&info.cover_image_filename);
+            let image_bytes = tokio::fs::read(&image_path)
+                .await
+                .wrap_err_with(|| format!("Failed to read image at {:?}", image_path))?;
+            base64::engine::general_purpose::STANDARD.encode(image_bytes)
+        };
+
+        Ok(Self {
+            hash,
+            info,
+            image_string,
+        })
     }
     pub async fn load_with_cache(level_dir: &Path, cache: Operator) -> Result<Self> {
         let dirname = level_dir
