@@ -1,12 +1,8 @@
 import { useMemo } from "react";
 import { Playlist } from "../typeUtils";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-} from "mantine-react-table";
-import { Button, Title } from "@mantine/core";
-import clsx from "clsx";
+import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
+import { useCustomizedTable } from "../components/Table";
+import { Button } from "@mantine/core";
 
 export function PlaylistList(props: {
   playlists: Playlist[];
@@ -15,6 +11,25 @@ export function PlaylistList(props: {
 }) {
   const columns = useMemo<MRT_ColumnDef<Playlist>[]>(
     () => [
+      {
+        accessorFn: (row) => {
+          return (
+            <div className="flex items-center h-full">
+              {row.imageString ? (
+                <img
+                  src={`data:image/png;base64,${row.imageString}`}
+                  alt={row.playlistTitle}
+                  className="size-10"
+                />
+              ) : (
+                <div className="size-10" />
+              )}
+            </div>
+          );
+        },
+        header: "Image",
+        enableColumnOrdering: false,
+      },
       {
         accessorKey: "playlistTitle",
         header: "Title",
@@ -26,51 +41,23 @@ export function PlaylistList(props: {
     ],
     [],
   );
-  const table = useMantineReactTable({
+
+  const table = useCustomizedTable({
     columns,
     data: props.playlists,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enablePagination: false,
-    enableRowVirtualization: true,
-    initialState: { density: "xs" },
-    renderTopToolbarCustomActions: () => {
-      return <Title order={4}>Playlists</Title>;
-    },
-    mantinePaperProps: {
-      className: "h-full flex flex-col",
-    },
-    mantineTableContainerProps: {
-      className: "flex-grow",
-    },
-    mantineTableBodyRowProps: ({ staticRowIndex }) => {
-      return {
-        className: clsx({
-          "*:!bg-blue-500/20 *:mix-blend-multiply":
-            staticRowIndex === props.selectedPlaylist,
-        }),
-        onClick: () => {
-          if (staticRowIndex === props.selectedPlaylist) {
-            props.setSelectedPlaylist(null);
-          } else {
-            props.setSelectedPlaylist(staticRowIndex);
-          }
-        },
-      };
-    },
-    renderBottomToolbar: (
-      <div className="flex h-10 items-center border-solid border-x-0 border-b-0 border-t-2 px-2 flex-shrink-0">
+    selected: props.selectedPlaylist,
+    setSelected: props.setSelectedPlaylist,
+    title: "Playlists",
+    customToolbar: (
+      <div className="flex">
         <Button
           size="xs"
-          onClick={() => {
-            props.setSelectedPlaylist("noPlaylist");
-          }}
+          onClick={() => props.setSelectedPlaylist("noPlaylist")}
         >
-          Levels not in any playlist
+          Level not in any playlist
         </Button>
       </div>
     ),
-    enableFullScreenToggle: false,
   });
 
   return (

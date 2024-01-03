@@ -1,43 +1,37 @@
-import { UnavailableLevel } from "./";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@mantine/core";
+import { MissingLevel } from "./";
+import { useMemo, useState } from "react";
+import { ActionIcon, Button } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
 import pLimit from "p-limit";
 import { commands } from "../bindings";
 import { Level, Playlist, isSuccess } from "../typeUtils";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-  MRT_Virtualizer,
-} from "mantine-react-table";
-import { Title } from "@mantine/core";
-import clsx from "clsx";
+import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
+import { useCustomizedTable } from "../components/Table";
 import { IconDownload } from "@tabler/icons-react";
 
 export function LevelList(props: {
-  levels: (Level | UnavailableLevel)[];
+  levels: (Level | MissingLevel)[];
   playlist: Playlist | null | "noPlaylist";
 }) {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const missingLevels = useMemo(() => {
+    return props.levels.filter((level) => "missing" in level) as MissingLevel[];
+  }, [props.levels]);
 
   const { mutateAsync: addLevelByHash } = useMutation({
     mutationFn: commands.levelAddByHash,
   });
   const queryClient = useQueryClient();
 
-  const downloadUnavailable = async () => {
-    const levels = props.levels.filter(
-      (level) => "unavailable" in level,
-    ) as UnavailableLevel[];
+  const downloadMissing = async () => {
     notifications.show({
       title: "Downloading levels",
-      message: `Downloading ${levels.length} levels`,
+      message: `Downloading ${missingLevels.length} levels`,
     });
     const limit = pLimit(3);
     const promises = [];
-    for (const l of levels) {
+    for (const l of missingLevels) {
       promises.push(
         limit(async () => {
           const level = await addLevelByHash(l.hash);
@@ -63,84 +57,60 @@ export function LevelList(props: {
     await Promise.all(promises);
   };
 
-  const columns = useMemo<MRT_ColumnDef<Level | UnavailableLevel>[]>(
+  const columns = useMemo<MRT_ColumnDef<Level | MissingLevel>[]>(
     () => [
       {
         accessorKey: "info._songName",
         header: "Name",
       },
+      {
+        header: "Download",
+        accessorFn: (row) => {
+          return (
+            "missing" in row && (
+              <ActionIcon size="sm">
+                <IconDownload className="size-4/5" />
+              </ActionIcon>
+            )
+          );
+        },
+      },
     ],
     [],
   );
 
-  const rowVirtualizerInstanceRef =
-    useRef<MRT_Virtualizer<HTMLDivElement, HTMLTableRowElement>>(null);
+  const title = useMemo(() => {
+    let title;
+    if (props.playlist === null) {
+      title = "All levels";
+    } else if (props.playlist === "noPlaylist") {
+      title = "Levels not in any playlist";
+    } else {
+      title = `Levels of playlist: ${props.playlist.playlistTitle}`;
+    }
+    return title;
+  }, [props.playlist]);
 
-  const table = useMantineReactTable({
+  const table = useCustomizedTable({
     columns,
     data: props.levels,
-    enableRowSelection: true,
-    enableColumnOrdering: true,
-    enablePagination: false,
-    enableRowVirtualization: true,
-    enableRowNumbers: true,
-    rowVirtualizerInstanceRef,
-    rowVirtualizerOptions: {
-      estimateSize: () => 49,
-    },
-    initialState: { density: "xs" },
-    renderTopToolbarCustomActions: () => {
-      let text;
-      if (props.playlist === null) {
-        text = "All levels";
-      } else if (props.playlist === "noPlaylist") {
-        text = "Levels not in any playlist";
-      } else {
-        text = `Levels of playlist: ${props.playlist.playlistTitle}`;
-      }
-      return <Title order={4}>{text}</Title>;
-    },
-    mantinePaperProps: {
-      className: "h-full flex flex-col",
-    },
-    mantineTableContainerProps: {
-      className: "flex-grow",
-    },
-    mantineTableBodyRowProps: ({ staticRowIndex }) => {
-      return {
-        className: clsx({
-          "*:!bg-blue-500/20 *:mix-blend-multiply":
-            staticRowIndex === selectedLevel,
-        }),
-        onClick: () => {
-          if (staticRowIndex === selectedLevel) {
-            setSelectedLevel(null);
-          } else {
-            setSelectedLevel(staticRowIndex);
-          }
-        },
-      };
-    },
-    enableFullScreenToggle: false,
-    renderBottomToolbar: (
-      <div className="flex h-10 items-center border-solid border-x-0 border-b-0 border-t-2 px-2 flex-shrink-0">
+    selected: selectedLevel,
+    setSelected: setSelectedLevel,
+    title,
+    customToolbar: (
+      <div className="flex">
         <Button
           size="xs"
-          leftSection={<IconDownload />}
-          onClick={downloadUnavailable}
+          onClick={downloadMissing}
+          disabled={missingLevels.length === 0}
         >
-          Download unavailable
+          {missingLevels.length === 0
+            ? "No missing levels"
+            : `Download missing ${missingLevels.length} levels`}
         </Button>
       </div>
     ),
   });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    try {
-      rowVirtualizerInstanceRef.current?.scrollToIndex(0);
-    } catch (e) {}
-  }, [props.levels]);
 
   return (
     <div className="h-full">

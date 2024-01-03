@@ -99,7 +99,7 @@ export function Topbar() {
 
   return (
     <>
-      <div className="h-11 py-2 flex items-center gap-2 bg-gray-500/20">
+      <div className="h-11 py-2 flex items-center gap-2 bg-gray-500/20 pl-2">
         <Title order={3}>BQSM</Title>
         <Tooltip label="Change root folder">
           <ActionIcon variant="filled" aria-label="Settings" onClick={open}>

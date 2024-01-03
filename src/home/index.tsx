@@ -6,13 +6,13 @@ import { LevelList } from "./LevelList";
 import { Level, Playlist } from "../typeUtils";
 import { Topbar } from "./Topbar";
 
-export type UnavailableLevel = {
+export type MissingLevel = {
   hash: string;
   info: {
     _songName: string;
   };
   key?: string;
-  unavailable: true;
+  missing: true;
 };
 
 export function Home({
@@ -41,7 +41,7 @@ export function Home({
       });
     }
 
-    return playlists[selectedPlaylist].songs.map((song) => {
+    return (playlists[selectedPlaylist]?.songs ?? []).map((song) => {
       const level = levels.find((level) => level.hash === song.hash);
       if (!level) {
         return {
@@ -50,8 +50,8 @@ export function Home({
           info: {
             _songName: song.songName,
           },
-          unavailable: true,
-        } satisfies UnavailableLevel;
+          missing: true,
+        } satisfies MissingLevel;
       }
       return level;
     });
@@ -75,7 +75,7 @@ export function Home({
             setSelectedPlaylist={setSelectedPlaylist}
           />
         </Panel>
-        <PanelResizeHandle className="px-[1px] bg-black" />
+        <PanelResizeHandle className="w-[5px] bg-gray-500/80" />
         <Panel>
           <LevelList levels={showLevels} playlist={currentPlaylist} />
         </Panel>
