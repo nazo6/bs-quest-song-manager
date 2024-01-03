@@ -25,7 +25,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <QueryClientProvider client={queryClient}>
       <>
         <ReactQueryDevtools initialIsOpen={false} />
-        <MantineProvider>
+        <MantineProvider defaultColorScheme="auto">
           <App />
           <Notifications />
         </MantineProvider>

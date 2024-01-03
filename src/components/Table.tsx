@@ -1,9 +1,9 @@
 import { Title } from "@mantine/core";
-import clsx from "clsx";
 import {
   MRT_ColumnDef,
   MRT_GlobalFilterTextInput,
   MRT_ShowHideColumnsButton,
+  MRT_TableOptions,
   MRT_ToggleFiltersButton,
   MRT_ToggleGlobalFilterButton,
   useMantineReactTable,
@@ -12,10 +12,12 @@ import {
 export type TableOpts<S, T extends Record<string, S>> = {
   columns: MRT_ColumnDef<T>[];
   data: T[];
-  selected: number | null | unknown;
-  setSelected: (index: number | null) => void;
+  selected?: number | null | unknown;
+  setSelected?: (index: number | null) => void;
   title: string;
   customToolbar?: React.ReactNode;
+  renderDetailPanel?: MRT_TableOptions<T>["renderDetailPanel"];
+  mantineTableBodyRowProps?: MRT_TableOptions<T>["mantineTableBodyRowProps"];
 };
 
 export function useCustomizedTable<S, T extends Record<string, S>>(
@@ -35,6 +37,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
     enableColumnOrdering: true,
     enableFullScreenToggle: false,
     enableColumnDragging: false,
+    enableStickyHeader: true,
     renderTopToolbarCustomActions: ({ table }) => {
       return (
         <div className="relative w-full flex flex-col">
@@ -54,6 +57,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
         </div>
       );
     },
+    renderDetailPanel: opts.renderDetailPanel,
     enableToolbarInternalActions: false,
     mantineSearchTextInputProps: {
       className: "hidden",
@@ -67,21 +71,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
     mantineTableContainerProps: {
       className: "flex-grow",
     },
-    mantineTableBodyRowProps: ({ staticRowIndex }) => {
-      return {
-        className: clsx("h-14", {
-          "*:!bg-blue-500/20 *:mix-blend-multiply":
-            staticRowIndex === opts.selected,
-        }),
-        onClick: () => {
-          if (staticRowIndex === opts.selected) {
-            opts.setSelected(null);
-          } else {
-            opts.setSelected(staticRowIndex);
-          }
-        },
-      };
-    },
+    mantineTableBodyRowProps: opts.mantineTableBodyRowProps,
   });
 
   return table;

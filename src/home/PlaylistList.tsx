@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { Playlist } from "../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../components/Table";
-import { Chip } from "@mantine/core";
+import { Chip, Title } from "@mantine/core";
+import { MaybeImage } from "../components/Image";
+import clsx from "clsx";
 
 export function PlaylistList(props: {
   playlists: Playlist[];
@@ -15,15 +17,7 @@ export function PlaylistList(props: {
         accessorFn: (row) => {
           return (
             <div className="flex items-center h-full">
-              {row.imageString ? (
-                <img
-                  src={`data:image/png;base64,${row.imageString}`}
-                  alt={row.playlistTitle}
-                  className="size-10 border-solid border"
-                />
-              ) : (
-                <div className="size-10" />
-              )}
+              <MaybeImage imageString={row.imageString} className="size-10" />
             </div>
           );
         },
@@ -66,6 +60,41 @@ export function PlaylistList(props: {
         </Chip>
       </div>
     ),
+    renderDetailPanel: ({ row }) => (
+      <div className="flex gap-2">
+        <MaybeImage
+          imageString={row.original.imageString}
+          className="size-20 lg:size-44 flex-shrink-0"
+        />
+        <div className="flex flex-col *:m-0">
+          <Title className="border-solid border-0 border-b" order={4}>
+            {row.original.playlistTitle}
+          </Title>
+          <Title order={5}>Author</Title>
+          <p>{row.original.playlistAuthor ?? "--"}</p>
+          <Title order={5}>Description</Title>
+          <p>{row.original.playlistDescription ?? "--"}</p>
+        </div>
+      </div>
+    ),
+    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex }) => {
+      return {
+        className: clsx({
+          "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":
+            !isDetailPanel && staticRowIndex === props.selectedPlaylist,
+          "h-14": !isDetailPanel,
+        }),
+        onClick: () => {
+          if (!isDetailPanel) {
+            if (staticRowIndex === props.selectedPlaylist) {
+              props.setSelectedPlaylist(null);
+            } else {
+              props.setSelectedPlaylist(staticRowIndex);
+            }
+          }
+        },
+      };
+    },
   });
 
   return (

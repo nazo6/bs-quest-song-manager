@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
-import { ActionIcon, Button } from "@mantine/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
-import pLimit from "p-limit";
-import { Song, commands } from "../bindings";
-import { Level, Playlist, isSuccess } from "../typeUtils";
+import { ActionIcon, Button, Table, Title } from "@mantine/core";
+import { Song } from "../bindings";
+import { Level, Playlist } from "../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../components/Table";
 import { IconDownload } from "@tabler/icons-react";
+import { MaybeImage } from "../components/Image";
+import { useBatchDownload } from "../lib/batchDownload";
 
 type PlaylistLevel =
   | {
@@ -25,7 +24,8 @@ export function LevelList(props: {
   levels: Level[];
   playlist: Playlist | null;
 }) {
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [batchDownload, cancelBatchDownload] = useBatchDownload();
+  const [batchDownloading, setBatchDownloading] = useState(false);
 
   const playlistLevels: PlaylistLevel[] = useMemo(() => {
     if (props.playlist) {
@@ -60,44 +60,6 @@ export function LevelList(props: {
   }, [props.levels, props.levelsMap, props.playlist]);
   const missingLevels = playlistLevels.filter((l) => l.missing);
 
-  const { mutateAsync: addLevelByHash } = useMutation({
-    mutationFn: commands.levelAddByHash,
-  });
-  const queryClient = useQueryClient();
-
-  const downloadMissing = async () => {
-    notifications.show({
-      title: "Downloading levels",
-      message: `Downloading ${missingLevels.length} levels`,
-    });
-    const limit = pLimit(3);
-    const promises = [];
-    for (const l of missingLevels) {
-      promises.push(
-        limit(async () => {
-          const level = await addLevelByHash(l.song.hash);
-          if (!isSuccess(level)) {
-            notifications.show({
-              title: "Failed to download level",
-              message: `Failed to download level : ${level.error}`,
-            });
-            return;
-          }
-
-          queryClient.invalidateQueries({
-            queryKey: ["levelGetAll"],
-          });
-          notifications.show({
-            title: "Added level",
-            message: `Successfully downloaded and added level : ${level.data.info._songName}`,
-          });
-        }),
-      );
-    }
-
-    await Promise.all(promises);
-  };
-
   const columns = useMemo<MRT_ColumnDef<PlaylistLevel>[]>(
     () => [
       {
@@ -106,15 +68,10 @@ export function LevelList(props: {
         accessorFn: (row) => {
           return (
             <div className="flex items-center h-full">
-              {!row.missing ? (
-                <img
-                  src={`data:image/png;base64,${row.level.image_string}`}
-                  alt={row.level.info._songName}
-                  className="size-10 border-solid border"
-                />
-              ) : (
-                <div className="size-10" />
-              )}
+              <MaybeImage
+                imageString={row.missing ? null : row.level.image_string}
+                className="size-10"
+              />
             </div>
           );
         },
@@ -128,7 +85,7 @@ export function LevelList(props: {
         accessorFn: (row) => {
           return (
             row.missing && (
-              <ActionIcon size="sm">
+              <ActionIcon size="sm" disabled={batchDownloading}>
                 <IconDownload className="size-4/5" />
               </ActionIcon>
             )
@@ -136,7 +93,7 @@ export function LevelList(props: {
         },
       },
     ],
-    [],
+    [batchDownloading],
   );
 
   const title = useMemo(() => {
@@ -152,26 +109,81 @@ export function LevelList(props: {
   const table = useCustomizedTable({
     columns,
     data: playlistLevels,
-    selected: selectedLevel,
-    setSelected: setSelectedLevel,
     title,
     customToolbar: (
       <div className="flex">
         <Button
           size="xs"
-          onClick={downloadMissing}
+          onClick={() => {
+            if (batchDownloading) {
+              cancelBatchDownload();
+            } else {
+              setBatchDownloading(true);
+              batchDownload(missingLevels.map((l) => l.song.hash)).then(() => {
+                setBatchDownloading(false);
+              });
+            }
+          }}
           disabled={missingLevels.length === 0}
         >
           {missingLevels.length === 0
             ? "No missing levels"
-            : `Download missing ${missingLevels.length} levels`}
+            : batchDownloading
+              ? "Cancel download"
+              : `Download missing ${missingLevels.length} levels`}
         </Button>
       </div>
     ),
+    renderDetailPanel: ({ row }) => {
+      const level = row.original.missing ? null : row.original.level;
+      return (
+        <div className="flex gap-2">
+          <MaybeImage
+            imageString={level?.image_string}
+            className="size-20 lg:size-44 flex-shrink-0"
+          />
+          <Table>
+            <Table.Tbody>
+              {level ? (
+                <>
+                  <Table.Tr>
+                    <Table.Td>Title</Table.Td>
+                    <Table.Td>
+                      <Title order={4}>{level.info._songName}</Title>
+                    </Table.Td>
+                  </Table.Tr>
+                  <Table.Tr>
+                    <Table.Td>Author</Table.Td>
+                    <Table.Td>{level.info._songAuthorName}</Table.Td>
+                  </Table.Tr>
+                  <Table.Tr>
+                    <Table.Td>Subname</Table.Td>
+                    <Table.Td>{level.info._songSubName}</Table.Td>
+                  </Table.Tr>
+                </>
+              ) : (
+                <Table.Tr>
+                  <Table.Td>Title</Table.Td>
+                  <Table.Td>{row.original.song.songName}</Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </div>
+      );
+    },
+    mantineTableBodyRowProps: ({ isDetailPanel, row }) => {
+      return {
+        className:
+          !isDetailPanel && row.original.missing
+            ? "[&>:first-child]:!bg-red-500/20 [&>:first-child]:mix-blend-multiply [&>:first-child]:dark:mix-blend-screen"
+            : "",
+      };
+    },
   });
 
   return (
-    <div className="h-full">
+    <div className="h-full [&:first-child]:bg-red-500/20 ">
       <MantineReactTable table={table} />;
     </div>
   );
