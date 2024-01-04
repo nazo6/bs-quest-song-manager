@@ -1,9 +1,10 @@
 import { ActionIcon, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconFolder, IconRefresh } from "@tabler/icons-react";
-import { SetRootDirModal } from "../components/SetRootDir";
-import { useScanStart } from "../lib/useScanStart";
-import { ThemeSelector } from "../components/ThemeSelector";
+import { SetRootDirModal } from "../../components/SetRootDir";
+import { useScanStart } from "../../lib/useScanStart";
+import { ThemeSelector } from "./ThemeSelector";
+import { QueueViewerButton } from "./QueueViewer";
 
 export function Topbar() {
   const [opened, { close, open }] = useDisclosure(false);
@@ -31,6 +32,9 @@ export function Topbar() {
             <IconRefresh style={{ width: "70%", height: "70%" }} stroke={1.5} />
           </ActionIcon>
         </Tooltip>
+
+        <QueueViewerButton />
+
         <div className="ml-auto">
           <ThemeSelector />
         </div>

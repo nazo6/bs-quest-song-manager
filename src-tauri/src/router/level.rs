@@ -8,9 +8,7 @@ use super::{IntoMsg, State};
 #[tauri::command]
 #[specta::specta]
 pub async fn level_get_all(ctx: State<'_>) -> Result<Vec<Level>, String> {
-    info!("Getting all levels");
     let res = ctx.levels.read().await.clone();
-    info!("Got all levels");
     Ok(res)
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ActionIcon, Button, Table, Title } from "@mantine/core";
 import { Song } from "../bindings";
 import { Level, Playlist } from "../typeUtils";
@@ -6,7 +6,7 @@ import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../components/Table";
 import { IconDownload } from "@tabler/icons-react";
 import { MaybeImage } from "../components/Image";
-import { useBatchDownload } from "../lib/batchDownload";
+import { useDownloadQueueContext } from "../components/DownloadQueueContext";
 
 type PlaylistLevel =
   | {
@@ -24,8 +24,7 @@ export function LevelList(props: {
   levels: Level[];
   playlist: Playlist | null;
 }) {
-  const [batchDownload, cancelBatchDownload] = useBatchDownload();
-  const [batchDownloading, setBatchDownloading] = useState(false);
+  const { queue, waiting, running } = useDownloadQueueContext();
 
   const playlistLevels: PlaylistLevel[] = useMemo(() => {
     if (props.playlist) {
@@ -60,8 +59,8 @@ export function LevelList(props: {
   }, [props.levels, props.levelsMap, props.playlist]);
   const missingLevels = playlistLevels.filter((l) => l.missing);
 
-  const columns = useMemo<MRT_ColumnDef<PlaylistLevel>[]>(
-    () => [
+  const columns = useMemo<MRT_ColumnDef<PlaylistLevel>[]>(() => {
+    return [
       {
         header: "Image",
         size: 50,
@@ -82,19 +81,24 @@ export function LevelList(props: {
       },
       {
         header: "Download",
-        accessorFn: (row) => {
-          return (
-            row.missing && (
-              <ActionIcon size="sm" disabled={batchDownloading}>
-                <IconDownload className="size-4/5" />
-              </ActionIcon>
-            )
-          );
-        },
+        accessorKey: "missing",
+        Cell: ({ row }) =>
+          row.original.missing && (
+            <ActionIcon
+              size="sm"
+              variant="outline"
+              disabled={
+                waiting.some((h) => h.hash === row.original.song.hash) ||
+                running.some((h) => h.hash === row.original.song.hash)
+              }
+              onClick={() => queue.enqueue(row.original.song.hash)}
+            >
+              <IconDownload className="size-4/5" />
+            </ActionIcon>
+          ),
       },
-    ],
-    [batchDownloading],
-  );
+    ];
+  }, [waiting, running, queue]);
 
   const title = useMemo(() => {
     let title;
@@ -115,22 +119,15 @@ export function LevelList(props: {
         <Button
           size="xs"
           onClick={() => {
-            if (batchDownloading) {
-              cancelBatchDownload();
-            } else {
-              setBatchDownloading(true);
-              batchDownload(missingLevels.map((l) => l.song.hash)).then(() => {
-                setBatchDownloading(false);
-              });
+            for (const l of missingLevels) {
+              queue.enqueue(l.song.hash);
             }
           }}
           disabled={missingLevels.length === 0}
         >
           {missingLevels.length === 0
             ? "No missing levels"
-            : batchDownloading
-              ? "Cancel download"
-              : `Download missing ${missingLevels.length} levels`}
+            : `Download missing ${missingLevels.length} levels`}
         </Button>
       </div>
     ),
