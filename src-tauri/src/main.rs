@@ -8,9 +8,11 @@ use tracing_subscriber::prelude::*;
 use crate::interface::DeepLinkEvent;
 
 mod api;
+mod command;
 mod constant;
+mod core;
 mod interface;
-mod router;
+mod specta;
 mod state;
 
 #[tokio::main]
@@ -44,7 +46,7 @@ async fn main() {
                 .await
                 .expect("Failed to init state!"),
         )
-        .plugin(router::specta_plugin())
+        .plugin(specta::specta_plugin())
         .setup(|app| {
             fn get_id(url: &str) -> Result<String, String> {
                 let url = url::Url::parse(url).map_err(|e| format!("{:#}", e))?;

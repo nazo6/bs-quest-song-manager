@@ -1,19 +1,13 @@
-use crate::{
-    interface::scan::ScanEvent,
-    router::{
-        scan::load::{load_levels, load_playlists},
-        IntoMsg,
-    },
-};
 use eyre::Result;
 use eyre::{eyre, Context};
 use tauri::AppHandle;
 use tauri_specta::Event;
 use tracing::info;
 
-use super::State;
+use crate::core::scan::{load_levels, load_playlists};
+use crate::interface::scan::ScanEvent;
 
-mod load;
+use super::{IntoMsg, State};
 
 #[tracing::instrument(skip(state, handle), err, ret)]
 #[tauri::command]
