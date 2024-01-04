@@ -5,18 +5,40 @@ use serde::{Deserialize, Serialize};
 
 use super::BASE_URL;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MapDetail {
     pub versions: Vec<MapVersion>,
+    pub id: String,
+    pub description: String,
+    pub stats: MapStats,
+    pub ranked: bool,
+    pub created_at: String,
+    pub updated_at: String,
+    pub last_published_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MapVersion {
     pub hash: String,
     #[serde(rename = "downloadURL")]
     pub download_url: String,
+    #[serde(rename = "coverURL")]
+    pub cover_url: String,
+    #[serde(rename = "previewURL")]
+    pub preview_url: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MapStats {
+    plays: u32,
+    downloads: u32,
+    upvotes: u32,
+    downvotes: u32,
+    /// 0 to 1 ?
+    score: f32,
 }
 
 pub async fn get_map_by_hash(hash: &str) -> Result<MapDetail> {

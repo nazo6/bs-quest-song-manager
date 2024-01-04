@@ -25,7 +25,10 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_string: string; info: LevelInfo; path: string } }, string>> {
+/**
+ * Return current level state.
+ */
+async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string } }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_get_all") };
 } catch (e) {
@@ -33,6 +36,9 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Clear level state.
+ */
 async levelStateClear() : Promise<__Result__<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_state_clear") };
@@ -41,7 +47,10 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
+/**
+ * Search, download add level to state and disk.
+ */
+async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_hash", { hash }) };
 } catch (e) {
@@ -49,7 +58,10 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
+/**
+ * Search, download add level to state and disk.
+ */
+async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_id", { id }) };
 } catch (e) {
@@ -57,6 +69,9 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Delete levels from state and disk.
+ */
 async levelDelete(hash: string) : Promise<__Result__<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_delete", { hash }) };
@@ -85,9 +100,9 @@ try {
  * Adds existing level to playlist.
  * Playlist id is index of playlist in `playlists` array.
  */
-async playlistAddExistingLevel(playlistId: number, hash: string) : Promise<__Result__<null, string>> {
+async playlistAddLevel(args: PlaylistAddLevelArgs) : Promise<__Result__<null, string>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_add_existing_level", { playlistId, hash }) };
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_add_level", { args }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -117,7 +132,15 @@ export type BeatMap = { _difficulty: string; _difficultyRank: number; _beatmapFi
 export type BeatMapSet = { _difficultyBeatmaps: BeatMap[] }
 export type DeepLinkEvent = { id: string }
 export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[]; _coverImageFilename: string }
+export type MapDetail = { versions: MapVersion[]; id: string; description: string; stats: MapStats; ranked: boolean; createdAt: string; updatedAt: string; lastPublishedAt: string }
+export type MapStats = { plays: number; downloads: number; upvotes: number; downvotes: number; 
+/**
+ * 0 to 1 ?
+ */
+score: number }
+export type MapVersion = { hash: string; downloadURL: string; coverURL: string; previewURL: string }
 export type ModRoot = string
+export type PlaylistAddLevelArgs = { playlistId: number; hash: string }
 export type ScanEvent = { Level: ScanResult } | { Playlist: ScanResult } | "Completed" | "Started"
 export type ScanResult = { Success: { path: string } } | { Failed: { reason: string; path: string } }
 export type Song = { hash: string; songName: string }

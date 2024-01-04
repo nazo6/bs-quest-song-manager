@@ -1,21 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { mutation, queryKey } from "../../typeUtils";
+import { Level, isSuccess, mutation, queryKey } from "../../typeUtils";
 import { useState } from "react";
 
 export type DownloadResult = { status: "ok" } | { status: "error" };
 export type DownloadJob = () => Promise<DownloadResult>;
-export type DownloadQueueItem =
-  | {
-      type: "hash";
-      hash: string;
-      queueId: number;
-    }
-  | {
-      type: "id";
-      id: string;
-      queueId: number;
-    };
-export type DownloadQueueItemParam =
+export type DownloadQueueItem = {
+  queueId: number;
+  playlistId?: number;
+} & (
   | {
       type: "hash";
       hash: string;
@@ -23,7 +15,20 @@ export type DownloadQueueItemParam =
   | {
       type: "id";
       id: string;
-    };
+    }
+);
+export type DownloadQueueItemParam = {
+  playlistId?: number;
+} & (
+  | {
+      type: "hash";
+      hash: string;
+    }
+  | {
+      type: "id";
+      id: string;
+    }
+);
 
 export class DownloadQueue {
   private _queue: DownloadQueueItem[];
@@ -107,6 +112,13 @@ export function useDownloadQueue() {
     },
   });
 
+  const { mutateAsync: addLevelToPlaylist } = useMutation({
+    ...mutation("playlistAddLevel"),
+    onSettled: async () => {
+      queryClient.invalidateQueries(queryKey("playlistGetAll"));
+    },
+  });
+
   const [completed, setCompleted] = useState<
     {
       queueItem: DownloadQueueItem;
@@ -119,11 +131,27 @@ export function useDownloadQueue() {
   const queue = new DownloadQueue({
     maxConcurrent: 3,
     downloader: async (queueItem) => {
+      let level: Level;
       if (queueItem.type === "hash") {
-        return addLevelByHash(queueItem.hash);
+        const res = await addLevelByHash(queueItem.hash);
+        if (!isSuccess(res)) {
+          return res;
+        }
+        level = res.data;
       } else {
-        return addLevelById(queueItem.id);
+        const res = await addLevelById(queueItem.id);
+        if (!isSuccess(res)) {
+          return res;
+        }
+        level = res.data;
       }
+      if (queueItem.playlistId) {
+        await addLevelToPlaylist({
+          playlistId: queueItem.playlistId,
+          hash: level.hash,
+        });
+      }
+      return { status: "ok" };
     },
     onStart: (queueItem: DownloadQueueItem) => {
       setRunning((prev) => [...prev, queueItem]);

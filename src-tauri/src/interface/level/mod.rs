@@ -1,6 +1,8 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
+
+use crate::external::beatsaver::map::MapDetail;
 mod impls;
 
 /// Struct to represent level.
@@ -10,6 +12,7 @@ pub struct Level {
     pub hash: String,
     pub image_string: String,
     pub info: LevelInfo,
+    pub remote_info: Option<MapDetail>,
     pub path: PathBuf,
 }
 

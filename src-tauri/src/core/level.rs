@@ -56,7 +56,7 @@ pub async fn get_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
 
     install_level(download_url, &level_dir).await?;
-    let level = Level::load(&level_dir).await?;
+    let level = Level::load(&level_dir, Some(res)).await?;
 
     info!("Added level: {}", level.info.song_name);
 
@@ -74,7 +74,7 @@ pub async fn get_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", version.hash));
 
     install_level(&version.download_url, &level_dir).await?;
-    let level = Level::load(&level_dir).await?;
+    let level = Level::load(&level_dir, Some(res)).await?;
 
     info!("Added level: {}", level.info.song_name);
 

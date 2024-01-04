@@ -7,6 +7,7 @@ import { RowActions } from "./RowActions";
 import { ExtendedLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
 import { DetailPanel } from "./DetailPanel";
 import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
+import { AddLevel } from "./AddLevel";
 
 export function LevelList({
   selectedPlaylist,
@@ -59,7 +60,7 @@ export function LevelList({
     data: playlist.extendedLevels,
     title: playlist.playlistTitle,
     customToolbar: (
-      <div className="flex">
+      <div className="flex gap-2">
         <Button
           size="xs"
           onClick={() => {
@@ -76,6 +77,11 @@ export function LevelList({
             ? "No missing levels"
             : `Download missing ${missingLevels.length} levels`}
         </Button>
+        <AddLevel
+          playlistId={
+            typeof selectedPlaylist === "number" ? selectedPlaylist : null
+          }
+        />
       </div>
     ),
     renderDetailPanel: ({ row }) => <DetailPanel row={row.original} />,

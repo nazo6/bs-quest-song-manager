@@ -20,7 +20,7 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
             command::level::level_delete,
             command::playlist::playlist_get_all,
             command::playlist::playlist_state_clear,
-            command::playlist::playlist_add_existing_level,
+            command::playlist::playlist_add_level,
             command::scan::scan_start,
         ])
         .events(tauri_specta::collect_events![ScanEvent, DeepLinkEvent]);

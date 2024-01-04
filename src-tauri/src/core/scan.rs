@@ -28,7 +28,7 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
     let level_get_futures = level_folders.into_iter().map(|path| {
         let handle = handle.clone();
         async move {
-            let level = Level::load(&path).await;
+            let level = Level::load(&path, None).await;
 
             match level {
                 Ok(level) => {
