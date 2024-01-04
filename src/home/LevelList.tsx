@@ -138,6 +138,7 @@ export function LevelList({
       {
         header: "#",
         accessorKey: "index",
+        size: 50,
       },
       {
         header: "Image",
@@ -161,7 +162,7 @@ export function LevelList({
         header: "Missing",
         accessorKey: "missing",
         Cell: ({ row }) =>
-          row.original.missing && (
+          row.original.missing ? (
             <div className="flex">
               <span className="text-red-500 pr-3">Yes</span>
               <ActionIcon
@@ -179,6 +180,8 @@ export function LevelList({
                 <IconDownload className="size-4/5" />
               </ActionIcon>
             </div>
+          ) : (
+            "No"
           ),
       },
     ];

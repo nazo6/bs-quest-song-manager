@@ -13,9 +13,10 @@ export function QueueViewerButton() {
             classNames={{
               label: "flex gap-2",
             }}
+            className="px-2 flex-shrink-0"
             size="xs"
           >
-            <IconCloudDownload className="size-3/5" />
+            <IconCloudDownload className="size-5 flex-shrink-0" />
             <p>{running.length}</p>
             <p>{waiting.length}</p>
             <p>{completed.length}</p>
