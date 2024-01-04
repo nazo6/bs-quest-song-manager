@@ -28,3 +28,10 @@ pub static CACHE_DIR: Lazy<PathBuf> = Lazy::new(|| {
     std::fs::create_dir_all(&path).unwrap();
     path
 });
+
+pub static CACHE: Lazy<opendal::Operator> = Lazy::new(|| {
+    let mut builder = opendal::services::Cacache::default();
+    builder.datadir(CACHE_DIR.to_str().unwrap());
+
+    opendal::Operator::new(builder).unwrap().finish()
+});

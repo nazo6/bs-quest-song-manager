@@ -1,5 +1,4 @@
-
-use crate::state::config::Config;
+use crate::interface::config::Config;
 
 use super::{IntoMsg, State};
 

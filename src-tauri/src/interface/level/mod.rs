@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-mod r#impl;
+mod impls;
 
 /// Struct to represent level.
 /// Contains info of all difficulties.

@@ -5,10 +5,30 @@ use std::path::PathBuf;
 use crate::constant::CONFIG_FILE_PATH;
 
 #[derive(Debug, Serialize, Deserialize, specta::Type, Clone, Default)]
+pub struct ModRoot(pub PathBuf);
+
+impl ModRoot {
+    pub fn level_dir(&self) -> PathBuf {
+        self.0.join("Mods").join("SongLoader").join("CustomLevels")
+    }
+    pub fn playlist_dir(&self) -> PathBuf {
+        self.0
+            .join("Mods")
+            .join("PlaylistManager")
+            .join("Playlists")
+    }
+}
+impl From<String> for ModRoot {
+    fn from(s: String) -> Self {
+        Self(PathBuf::from(s))
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, specta::Type, Clone, Default)]
 pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber
-    pub mod_root: Option<PathBuf>,
+    pub mod_root: Option<ModRoot>,
 }
 
 impl Config {

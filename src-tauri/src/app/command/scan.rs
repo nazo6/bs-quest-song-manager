@@ -1,19 +1,19 @@
+use eyre::Context;
 use eyre::Result;
-use eyre::{eyre, Context};
 use tauri::AppHandle;
 use tauri_specta::Event;
-use tracing::info;
 
 use crate::core::scan::{load_levels, load_playlists};
 use crate::interface::scan::ScanEvent;
 
+use super::macros::ensure_mod_root;
 use super::{IntoMsg, State};
 
 #[tracing::instrument(skip(state, handle), err, ret)]
 #[tauri::command]
 #[specta::specta]
 pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), String> {
-    info!("starting scan");
+    let root = ensure_mod_root!(state);
 
     let send_event = |event: ScanEvent| event.emit_all(&handle).unwrap();
 
@@ -25,19 +25,8 @@ pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), Strin
         return Err("Already scanning".to_string());
     }
 
-    let root = {
-        let config = state.config.read().await;
-
-        let root = config
-            .mod_root
-            .as_ref()
-            .ok_or_else(|| eyre!("root path is not set. Please set it with `set-root` command"))
-            .to_msg()?;
-        root.clone()
-    };
-
     let (levels, playlists) = futures::future::try_join(
-        load_levels(&root, state.cache.clone(), handle.clone()),
+        load_levels(&root, handle.clone()),
         load_playlists(handle.clone(), &root),
     )
     .await

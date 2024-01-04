@@ -1,21 +1,16 @@
-use std::path::Path;
-
 use eyre::{Context, Result};
 use futures::StreamExt;
 use tauri_specta::Event;
 
 use crate::interface::{
+    config::ModRoot,
     level::Level,
     playlist::Playlist,
     scan::{ScanEvent, ScanResult},
 };
 
-pub async fn load_levels(
-    root: &Path,
-    cache: opendal::Operator,
-    handle: tauri::AppHandle,
-) -> Result<Vec<Level>> {
-    let levels_path = root.join("Mods").join("SongLoader").join("CustomLevels");
+pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Vec<Level>> {
+    let levels_path = root.level_dir();
     let mut level_dirs = tokio::fs::read_dir(levels_path)
         .await
         .wrap_err("Failed to read level dir")?;
@@ -30,10 +25,9 @@ pub async fn load_levels(
     }
 
     let level_get_futures = level_folders.into_iter().map(|path| {
-        let cache = cache.clone();
         let handle = handle.clone();
         async move {
-            let level = Level::load_with_cache(&path, cache).await;
+            let level = Level::load(&path).await;
 
             match level {
                 Ok(level) => {
@@ -67,8 +61,8 @@ pub async fn load_levels(
 
     Ok(levels)
 }
-pub async fn load_playlists(apphandle: tauri::AppHandle, root: &Path) -> Result<Vec<Playlist>> {
-    let playlists_path = root.join("Mods").join("PlaylistManager").join("Playlists");
+pub async fn load_playlists(apphandle: tauri::AppHandle, root: &ModRoot) -> Result<Vec<Playlist>> {
+    let playlists_path = root.playlist_dir();
     let mut playlist_files = tokio::fs::read_dir(playlists_path)
         .await
         .wrap_err("Failed to read playlist dir")?;

@@ -14,3 +14,13 @@ pub async fn playlist_clear(ctx: State<'_>) -> Result<(), String> {
     *ctx.playlists.write().await = Vec::new();
     Ok(())
 }
+
+/// Adds level to playlist.
+/// If level exists, Ok(true) is returned.
+/// If level does not exist, Ok(false) is returned.
+#[tauri::command]
+#[specta::specta]
+pub async fn playlist_add_level(ctx: State<'_>) -> Result<(), String> {
+    *ctx.playlists.write().await = Vec::new();
+    Ok(())
+}

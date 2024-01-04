@@ -1,15 +1,13 @@
 use base64::Engine;
 use eyre::{Context, ContextCompat, Result};
-use opendal::Operator;
-use sha1::{Digest, Sha1};
 use std::path::Path;
 
-use crate::interface::level::LevelInfo;
+use crate::{constant::CACHE, interface::level::LevelInfo, utils::sha1_hash};
 
 use super::Level;
 
 impl Level {
-    pub async fn load(level_dir: &Path) -> Result<Self> {
+    pub async fn load_raw(level_dir: &Path) -> Result<Self> {
         let info_path = level_dir.join("Info.dat");
         let info_str = tokio::fs::read_to_string(&info_path)
             .await
@@ -33,12 +31,7 @@ impl Level {
         .await
         .wrap_err("Failed to read difficulty files")?;
 
-        let hash = {
-            let mut hasher = <Sha1 as Digest>::new();
-            let hash_str = info_str + &difficulty_strs.join("");
-            hasher.update(hash_str);
-            format!("{:x}", hasher.finalize())
-        };
+        let hash = sha1_hash(&(info_str + &difficulty_strs.join("")));
 
         let image_string = {
             let mut image_path = level_dir.to_owned();
@@ -55,18 +48,18 @@ impl Level {
             image_string,
         })
     }
-    pub async fn load_with_cache(level_dir: &Path, cache: Operator) -> Result<Self> {
+    pub async fn load(level_dir: &Path) -> Result<Self> {
         let dirname = level_dir
             .file_name()
             .wrap_err("Failed to find dirname")?
             .to_str()
             .wrap_err("Failed to convert dirname to str")?;
-        if let Ok(bytes) = cache.read(&format!("level/{}/file", dirname)).await {
+        if let Ok(bytes) = CACHE.read(&format!("level/{}/file", dirname)).await {
             serde_json::from_slice(&bytes).wrap_err("Failed to deserialize level from cache")
         } else {
-            let level = Self::load(level_dir).await?;
+            let level = Self::load_raw(level_dir).await?;
             let bytes = serde_json::to_vec(&level).wrap_err("Failed to serialize level")?;
-            cache
+            CACHE
                 .write(&format!("level/{}/file", dirname), bytes)
                 .await
                 .wrap_err("Failed to write level to cache")?;
