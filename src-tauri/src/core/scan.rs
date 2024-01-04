@@ -4,12 +4,13 @@ use tauri_specta::Event;
 
 use crate::interface::{
     config::ModRoot,
-    level::Level,
+    level::{Level, LevelMap},
     playlist::Playlist,
     scan::{ScanEvent, ScanResult},
 };
 
-pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Vec<Level>> {
+#[tracing::instrument(skip_all, err)]
+pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<LevelMap> {
     let levels_path = root.level_dir();
     let mut level_dirs = tokio::fs::read_dir(levels_path)
         .await
@@ -36,7 +37,7 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Vec
                     })
                     .emit_all(&handle)
                     .unwrap();
-                    Some(level)
+                    Some((level.hash.clone(), level))
                 }
                 Err(e) => {
                     ScanEvent::Level(ScanResult::Failed {
@@ -57,10 +58,12 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Vec
         .await
         .into_iter()
         .flatten()
-        .collect::<Vec<_>>();
+        .collect::<LevelMap>();
 
     Ok(levels)
 }
+
+#[tracing::instrument(skip_all, err)]
 pub async fn load_playlists(apphandle: tauri::AppHandle, root: &ModRoot) -> Result<Vec<Playlist>> {
     let playlists_path = root.playlist_dir();
     let mut playlist_files = tokio::fs::read_dir(playlists_path)

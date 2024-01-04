@@ -4,15 +4,31 @@ import { useState } from "react";
 
 export type DownloadResult = { status: "ok" } | { status: "error" };
 export type DownloadJob = () => Promise<DownloadResult>;
-export type DownloadQueueItem = {
-  hash: string;
-  id: number;
-};
+export type DownloadQueueItem =
+  | {
+      type: "hash";
+      hash: string;
+      queueId: number;
+    }
+  | {
+      type: "id";
+      id: string;
+      queueId: number;
+    };
+export type DownloadQueueItemParam =
+  | {
+      type: "hash";
+      hash: string;
+    }
+  | {
+      type: "id";
+      id: string;
+    };
 
 export class DownloadQueue {
   private _queue: DownloadQueueItem[];
 
-  private downloader: (hash: string) => Promise<DownloadResult>;
+  private downloader: (queueItem: DownloadQueueItem) => Promise<DownloadResult>;
 
   private concurrent: number;
   private maxConcurrent: number;
@@ -27,7 +43,7 @@ export class DownloadQueue {
 
   constructor(opts: {
     maxConcurrent: number;
-    downloader: (hash: string) => Promise<DownloadResult>;
+    downloader: (queueItem: DownloadQueueItem) => Promise<DownloadResult>;
     onStart?: (queueItem: DownloadQueueItem) => void;
     onResolve?: (queueItem: DownloadQueueItem, result: DownloadResult) => void;
     onQueueChange?: (queue: DownloadQueueItem[]) => void;
@@ -41,9 +57,9 @@ export class DownloadQueue {
     this.onQueueChange = opts.onQueueChange;
   }
 
-  public enqueue(hash: string) {
+  public enqueue(item: DownloadQueueItemParam) {
     this.maxId++;
-    this._queue.push({ hash, id: this.maxId });
+    this._queue.push({ ...item, queueId: this.maxId });
     this.onQueueChange?.(this._queue);
     this.nextJob();
   }
@@ -55,7 +71,7 @@ export class DownloadQueue {
   }
 
   public cancel(id: number) {
-    this._queue = this._queue.filter((item) => item.id !== id);
+    this._queue = this._queue.filter((item) => item.queueId !== id);
     this.onQueueChange?.(this._queue);
   }
 
@@ -66,7 +82,7 @@ export class DownloadQueue {
       this.onStart?.(next);
       this.onQueueChange?.(this._queue);
       this.concurrent++;
-      this.downloader(next.hash).then((value: DownloadResult) => {
+      this.downloader(next).then((value: DownloadResult) => {
         this.onResolve?.(next, value);
         this.concurrent--;
         this.nextJob();
@@ -84,6 +100,12 @@ export function useDownloadQueue() {
       queryClient.invalidateQueries(queryKey("levelGetAll"));
     },
   });
+  const { mutateAsync: addLevelById } = useMutation({
+    ...mutation("levelAddById"),
+    onSettled: async () => {
+      queryClient.invalidateQueries(queryKey("levelGetAll"));
+    },
+  });
 
   const [completed, setCompleted] = useState<
     {
@@ -96,13 +118,21 @@ export function useDownloadQueue() {
 
   const queue = new DownloadQueue({
     maxConcurrent: 3,
-    downloader: (hash: string) => addLevelByHash(hash),
+    downloader: async (queueItem) => {
+      if (queueItem.type === "hash") {
+        return addLevelByHash(queueItem.hash);
+      } else {
+        return addLevelById(queueItem.id);
+      }
+    },
     onStart: (queueItem: DownloadQueueItem) => {
       setRunning((prev) => [...prev, queueItem]);
     },
     onResolve: (queueItem: DownloadQueueItem, result: DownloadResult) => {
       setCompleted((prev) => [...prev, { queueItem, result }]);
-      setRunning((prev) => prev.filter((item) => item.id !== queueItem.id));
+      setRunning((prev) =>
+        prev.filter((item) => item.queueId !== queueItem.queueId),
+      );
     },
     onQueueChange: (queue: DownloadQueueItem[]) => {
       setWaiting([...queue]);

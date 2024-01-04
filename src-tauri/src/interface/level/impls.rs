@@ -2,12 +2,12 @@ use base64::Engine;
 use eyre::{Context, ContextCompat, Result};
 use std::path::Path;
 
-use crate::{constant::CACHE, interface::level::LevelInfo, utils::sha1_hash};
+use crate::{cache::CACHE, interface::level::LevelInfo, utils::sha1_hash};
 
 use super::Level;
 
 impl Level {
-    pub async fn load_raw(level_dir: &Path) -> Result<Self> {
+    async fn load_raw(level_dir: &Path) -> Result<Self> {
         let info_path = level_dir.join("Info.dat");
         let info_str = tokio::fs::read_to_string(&info_path)
             .await
@@ -46,6 +46,7 @@ impl Level {
             hash,
             info,
             image_string,
+            path: level_dir.to_owned(),
         })
     }
     pub async fn load(level_dir: &Path) -> Result<Self> {
@@ -54,17 +55,23 @@ impl Level {
             .wrap_err("Failed to find dirname")?
             .to_str()
             .wrap_err("Failed to convert dirname to str")?;
-        if let Ok(bytes) = CACHE.read(&format!("level/{}/file", dirname)).await {
-            serde_json::from_slice(&bytes).wrap_err("Failed to deserialize level from cache")
-        } else {
-            let level = Self::load_raw(level_dir).await?;
-            let bytes = serde_json::to_vec(&level).wrap_err("Failed to serialize level")?;
-            CACHE
-                .write(&format!("level/{}/file", dirname), bytes)
-                .await
-                .wrap_err("Failed to write level to cache")?;
-            Ok(level)
-        }
+
+        let level = match CACHE.get_level_by_dirname(dirname).await {
+            Ok(level) => level,
+            Err(_) => {
+                let level = Self::load_raw(level_dir).await?;
+                CACHE
+                    .set_level_hash_by_dirname(dirname, &level.hash)
+                    .await
+                    .wrap_err("Failed to write level hash to cache")?;
+                CACHE
+                    .set_level(&level)
+                    .await
+                    .wrap_err("Failed to write level to cache")?;
+                level
+            }
+        };
+        Ok(level)
     }
 }
 

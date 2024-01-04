@@ -7,6 +7,30 @@ use crate::interface::{scan::ScanEvent, DeepLinkEvent};
 mod command;
 mod state;
 
+pub fn specta_plugin() -> TauriPlugin<Wry> {
+    let specta_builder = tauri_specta::ts::builder()
+        .commands(tauri_specta::collect_commands![
+            command::config::config_get,
+            command::config::config_reset,
+            command::config::config_set_mod_root,
+            command::level::level_get_all,
+            command::level::level_state_clear,
+            command::level::level_add_by_hash,
+            command::level::level_add_by_id,
+            command::level::level_delete,
+            command::playlist::playlist_get_all,
+            command::playlist::playlist_state_clear,
+            command::playlist::playlist_add_existing_level,
+            command::scan::scan_start,
+        ])
+        .events(tauri_specta::collect_events![ScanEvent, DeepLinkEvent]);
+
+    #[cfg(debug_assertions)]
+    let specta_builder = specta_builder.path("../src/bindings.ts");
+
+    specta_builder.into_plugin()
+}
+
 pub async fn build() -> tauri::Builder<Wry> {
     tauri_plugin_deep_link::prepare("dev.nazo6.bqsm");
 
@@ -20,11 +44,8 @@ pub async fn build() -> tauri::Builder<Wry> {
         .setup(|app| {
             fn get_id(url: &str) -> Result<String, String> {
                 let url = url::Url::parse(url).map_err(|e| format!("{:#}", e))?;
-                let id = url
-                    .path_segments()
-                    .ok_or("Invalid url")?
-                    .next()
-                    .ok_or("No id specified")?;
+                let id = url.host_str().ok_or("No id specified")?;
+                dbg!(&url, &id);
                 Ok(id.to_string())
             }
 
@@ -50,25 +71,4 @@ pub async fn build() -> tauri::Builder<Wry> {
 
             Ok(())
         })
-}
-
-pub fn specta_plugin() -> TauriPlugin<Wry> {
-    let specta_builder = tauri_specta::ts::builder()
-        .commands(tauri_specta::collect_commands![
-            command::config::config_get,
-            command::config::config_reset,
-            command::config::config_set_mod_root,
-            command::level::level_get_all,
-            command::level::level_clear,
-            command::level::level_add_by_hash,
-            command::playlist::playlist_get_all,
-            command::playlist::playlist_clear,
-            command::scan::scan_start,
-        ])
-        .events(tauri_specta::collect_events![ScanEvent, DeepLinkEvent]);
-
-    #[cfg(debug_assertions)]
-    let specta_builder = specta_builder.path("../src/bindings.ts");
-
-    specta_builder.into_plugin()
 }

@@ -10,6 +10,7 @@ use crate::{
     utils::sha1_hash,
 };
 
+#[tracing::instrument(err)]
 async fn install_level(download_url: &str, extract_dir: &Path) -> eyre::Result<()> {
     let url_hash = sha1_hash(download_url);
     let bytes = reqwest::get(download_url)
@@ -43,10 +44,8 @@ async fn install_level(download_url: &str, extract_dir: &Path) -> eyre::Result<(
     Ok(())
 }
 
-#[tracing::instrument(err)]
-pub async fn level_add_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
-    info!("Adding level by hash: {}", hash);
-
+#[tracing::instrument(skip(root_dir), err)]
+pub async fn get_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
     let res = beatsaver::map::get_map_by_hash(&hash).await?;
     let download_url = &res
         .versions
@@ -57,6 +56,24 @@ pub async fn level_add_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
 
     install_level(download_url, &level_dir).await?;
+    let level = Level::load(&level_dir).await?;
+
+    info!("Added level: {}", level.info.song_name);
+
+    Ok(level)
+}
+
+#[tracing::instrument(skip(root_dir), err)]
+pub async fn get_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level> {
+    let res = beatsaver::map::get_map_by_id(id).await?;
+    let version = &res
+        .versions
+        .last()
+        .ok_or_else(|| eyre::eyre!("No versions"))?;
+
+    let level_dir = root_dir.level_dir().join(format!("bqsm-{}", version.hash));
+
+    install_level(&version.download_url, &level_dir).await?;
     let level = Level::load(&level_dir).await?;
 
     info!("Added level: {}", level.info.song_name);

@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use eyre::Result;
 use tokio::sync::{RwLock, Semaphore};
 
-use crate::interface::{config::Config, level::Level, playlist::Playlist};
+use crate::interface::{config::Config, level::LevelMap, playlist::Playlist};
 
 /// Application state
 ///
@@ -15,7 +17,7 @@ use crate::interface::{config::Config, level::Level, playlist::Playlist};
 pub(crate) struct AppState {
     pub config: RwLock<Config>,
     pub playlists: RwLock<Vec<Playlist>>,
-    pub levels: RwLock<Vec<Level>>,
+    pub levels: RwLock<LevelMap>,
     pub scan_state: ScanState,
 }
 
@@ -30,7 +32,7 @@ impl AppState {
         Ok(Self {
             config: RwLock::new(config),
             playlists: RwLock::new(Vec::new()),
-            levels: RwLock::new(Vec::new()),
+            levels: RwLock::new(HashMap::new()),
             scan_state: ScanState {
                 scan_permit: Semaphore::new(1),
             },

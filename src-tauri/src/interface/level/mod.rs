@@ -1,3 +1,5 @@
+use std::{collections::HashMap, path::PathBuf};
+
 use serde::{Deserialize, Serialize};
 mod impls;
 
@@ -8,6 +10,7 @@ pub struct Level {
     pub hash: String,
     pub image_string: String,
     pub info: LevelInfo,
+    pub path: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
@@ -39,4 +42,7 @@ pub struct BeatMap {
     #[serde(rename = "_beatmapFilename")]
     pub beatmap_filename: String,
 }
+
+/// Map of level hash to level data.
+pub type LevelMap = HashMap<String, Level>;
 

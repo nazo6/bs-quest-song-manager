@@ -3,6 +3,7 @@
 use tracing_subscriber::prelude::*;
 
 mod app;
+mod cache;
 mod constant;
 mod core;
 mod external;
@@ -31,8 +32,6 @@ async fn main() {
             .with_max_level(tracing::Level::INFO)
             .init();
     }
-
-    tauri_plugin_deep_link::prepare("dev.nazo6.bqsm");
 
     app::build()
         .await

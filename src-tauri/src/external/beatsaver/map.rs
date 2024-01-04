@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+// use std::collections::HashMap;
 
 use eyre::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -30,10 +30,9 @@ pub async fn get_map_by_hash(hash: &str) -> Result<MapDetail> {
     Ok(res)
 }
 
-pub async fn get_map_by_ids(ids: &[&str]) -> Result<HashMap<String, MapDetail>> {
-    let ids = ids.join(",");
-    let endpoint = format!("{}/maps/ids/{}", BASE_URL, ids);
-    let res: HashMap<String, MapDetail> = reqwest::get(&endpoint)
+pub async fn get_map_by_id(id: &str) -> Result<MapDetail> {
+    let endpoint = format!("{}/maps/id/{}", BASE_URL, id);
+    let res: MapDetail = reqwest::get(&endpoint)
         .await
         .wrap_err("Failed to fetch")?
         .json()
@@ -41,3 +40,15 @@ pub async fn get_map_by_ids(ids: &[&str]) -> Result<HashMap<String, MapDetail>> 
         .wrap_err("Failed to parse json")?;
     Ok(res)
 }
+
+// pub async fn get_map_by_ids(ids: &[&str]) -> Result<HashMap<String, MapDetail>> {
+//     let ids = ids.join(",");
+//     let endpoint = format!("{}/maps/ids/{}", BASE_URL, ids);
+//     let res: HashMap<String, MapDetail> = reqwest::get(&endpoint)
+//         .await
+//         .wrap_err("Failed to fetch")?
+//         .json()
+//         .await
+//         .wrap_err("Failed to parse json")?;
+//     Ok(res)
+// }

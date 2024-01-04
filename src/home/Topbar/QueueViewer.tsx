@@ -42,25 +42,31 @@ function QueueViewer(
       <div>
         <Title order={4}>Running {props.running.length} items</Title>
         <div className="flex flex-col">
-          {props.running.map((i) => (
-            <div key={i.hash}>{i.hash}</div>
-          ))}
+          {props.running.map((item) => {
+            const val = "hash" in item ? item.hash : item.id;
+            return <div key={val}>{val}</div>;
+          })}
         </div>
       </div>
       <div>
         <Title order={4}>Waiting {props.waiting.length} items</Title>
         <div className="flex flex-col">
-          {props.waiting.map((i) => (
-            <div key={i.hash}>{i.hash}</div>
-          ))}
+          {props.waiting.map((item) => {
+            const val = "hash" in item ? item.hash : item.id;
+            return <div key={val}>{val}</div>;
+          })}
         </div>
       </div>
       <div>
         <Title order={4}>Completed {props.completed.length} items</Title>
         <div className="flex flex-col">
-          {props.completed.map((i) => (
-            <div key={i.queueItem.hash}>{i.queueItem.hash}</div>
-          ))}
+          {props.completed.map((item) => {
+            const val =
+              "hash" in item.queueItem
+                ? item.queueItem.hash
+                : item.queueItem.id;
+            return <div key={val}>{val}</div>;
+          })}
         </div>
       </div>
     </div>

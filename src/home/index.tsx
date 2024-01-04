@@ -4,18 +4,27 @@ import { PlaylistList } from "./PlaylistList";
 import { useState } from "react";
 import { LevelList } from "./LevelList";
 import { Topbar } from "./Topbar";
+import { LinkHandler } from "../components/LinkHandler";
 
 export function Home() {
+  return (
+    <div className="flex flex-col h-full">
+      <Topbar />
+      <Main />
+    </div>
+  );
+}
+
+function Main() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<
     number | null | "noPlaylist"
   >(null);
 
   return (
-    <div className="flex flex-col h-full">
-      <Topbar />
+    <div className="flex-grow relative min-h-0">
+      <LinkHandler />
       <PanelGroup
         direction="horizontal"
-        className="flex-grow"
         storage={{
           getItem: () => null,
           setItem: () => {},
