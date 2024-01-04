@@ -60,7 +60,7 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
     renderDetailPanel: opts.renderDetailPanel,
     enableToolbarInternalActions: false,
     mantineSearchTextInputProps: {
-      className: "hidden",
+      className: "!hidden",
     },
     mantineTopToolbarProps: {
       className: "min-h-[unset]",
