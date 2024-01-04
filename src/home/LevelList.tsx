@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { ActionIcon, Button, Table, Title } from "@mantine/core";
 import { Song } from "../bindings";
-import { Level, Playlist, isSuccess, query } from "../typeUtils";
+import { Level, isSuccess, query } from "../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../components/Table";
 import { IconDownload } from "@tabler/icons-react";
@@ -14,10 +14,12 @@ type ExtendedLevel =
       missing: false;
       level: Level;
       song: Song;
+      index: number;
     }
   | {
       missing: true;
       song: Song;
+      index: number;
     };
 type ExtendedPlaylist = {
   playlistTitle: string;
@@ -27,30 +29,18 @@ type ExtendedPlaylist = {
   playlistDescription: string | null;
 };
 
-export function LevelList(props: {
-  selectedPlaylist: number | null | "noPlaylist";
-}) {
-  const { data: levels } = useQuery(query("levelGetAll"));
-  const { data: playlists } = useQuery(query("playlistGetAll"));
-
-  return levels && isSuccess(levels) && playlists && isSuccess(playlists) ? (
-    <LevelListInner
-      levels={levels.data}
-      playlists={playlists.data}
-      selectedPlaylist={props.selectedPlaylist}
-    />
-  ) : null;
-}
-
-export function LevelListInner({
-  levels,
-  playlists,
+export function LevelList({
   selectedPlaylist,
 }: {
-  levels: Level[];
-  playlists: Playlist[];
   selectedPlaylist: number | null | "noPlaylist";
 }) {
+  const { data: levelsRes } = useQuery(query("levelGetAll"));
+  const { data: playlistsRes } = useQuery(query("playlistGetAll"));
+
+  const levels = levelsRes && isSuccess(levelsRes) ? levelsRes.data : [];
+  const playlists =
+    playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : [];
+
   const levelsMap = useMemo(() => {
     const map: Record<string, Level> = {};
     for (const level of levels) {
@@ -72,11 +62,12 @@ export function LevelListInner({
 
       return {
         playlistTitle: "Level not in any playlist",
-        extendedLevels: Array.from(hashs).map((hash) => {
+        extendedLevels: Array.from(hashs).map((hash, i) => {
           const level = levelsMap[hash]!;
           return {
             missing: false,
             level,
+            index: i,
             song: {
               key: null,
               hash,
@@ -92,18 +83,20 @@ export function LevelListInner({
     } else if (selectedPlaylist && playlists[selectedPlaylist]) {
       const extendedLevels: ExtendedLevel[] = playlists[
         selectedPlaylist
-      ]!.songs.map((song) => {
+      ]!.songs.map((song, index) => {
         const level = levelsMap[song.hash];
         if (level) {
           return {
             missing: false,
             level,
             song,
+            index,
           };
         } else {
           return {
             missing: true,
             song,
+            index,
           };
         }
       });
@@ -112,10 +105,11 @@ export function LevelListInner({
         ...playlists[selectedPlaylist]!,
       };
     } else {
-      const extendedLevels: ExtendedLevel[] = levels.map((level) => {
+      const extendedLevels: ExtendedLevel[] = levels.map((level, index) => {
         return {
           missing: false,
           level,
+          index,
           song: {
             key: null,
             hash: level.hash,
@@ -142,6 +136,10 @@ export function LevelListInner({
   const columns = useMemo<MRT_ColumnDef<ExtendedLevel>[]>(() => {
     return [
       {
+        header: "#",
+        accessorKey: "index",
+      },
+      {
         header: "Image",
         size: 50,
         accessorFn: (row) => {
@@ -160,21 +158,27 @@ export function LevelListInner({
         header: "Name",
       },
       {
-        header: "Download",
+        header: "Missing",
         accessorKey: "missing",
         Cell: ({ row }) =>
           row.original.missing && (
-            <ActionIcon
-              size="sm"
-              variant="outline"
-              disabled={
-                waiting.some((h) => h.hash === row.original.song.hash) ||
-                running.some((h) => h.hash === row.original.song.hash)
-              }
-              onClick={() => queue.enqueue(row.original.song.hash)}
-            >
-              <IconDownload className="size-4/5" />
-            </ActionIcon>
+            <div className="flex">
+              <span className="text-red-500 pr-3">Yes</span>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                disabled={
+                  waiting.some((h) => h.hash === row.original.song.hash) ||
+                  running.some((h) => h.hash === row.original.song.hash)
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  queue.enqueue(row.original.song.hash);
+                }}
+              >
+                <IconDownload className="size-4/5" />
+              </ActionIcon>
+            </div>
           ),
       },
     ];
@@ -219,7 +223,7 @@ export function LevelListInner({
                   </Title>
                 </Table.Td>
               </Table.Tr>
-              {level && (
+              {level ? (
                 <>
                   <Table.Tr>
                     <Table.Td>Author</Table.Td>
@@ -228,6 +232,13 @@ export function LevelListInner({
                   <Table.Tr>
                     <Table.Td>Subname</Table.Td>
                     <Table.Td>{level.info._songSubName}</Table.Td>
+                  </Table.Tr>
+                </>
+              ) : (
+                <>
+                  <Table.Tr>
+                    <Table.Td>Missing</Table.Td>
+                    <Table.Td className="text-red-500">Missing</Table.Td>
                   </Table.Tr>
                 </>
               )}
@@ -246,6 +257,11 @@ export function LevelListInner({
           !isDetailPanel && row.original.missing
             ? "[&>:first-child]:!bg-red-500/20 [&>:first-child]:mix-blend-multiply [&>:first-child]:dark:mix-blend-screen"
             : "",
+        onClick: () => {
+          if (!isDetailPanel) {
+            row.toggleExpanded();
+          }
+        },
       };
     },
   });
@@ -253,7 +269,7 @@ export function LevelListInner({
   // biome-ignore lint/correctness/useExhaustiveDependencies:
   useEffect(() => {
     table.resetExpanded();
-  }, [playlist]);
+  }, [selectedPlaylist]);
 
   return (
     <div className="h-full [&:first-child]:bg-red-500/20 ">

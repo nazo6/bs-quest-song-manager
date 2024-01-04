@@ -7,20 +7,14 @@ import { MaybeImage } from "../components/Image";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 
-type Props = {
+export function PlaylistList(props: {
   selectedPlaylist: number | null | "noPlaylist";
   setSelectedPlaylist: (index: number | null | "noPlaylist") => void;
-};
+}) {
+  const { data: playlistsRes } = useQuery(query("playlistGetAll"));
+  const playlists =
+    playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : [];
 
-export function PlaylistList(props: Props) {
-  const { data: playlists } = useQuery(query("playlistGetAll"));
-
-  return playlists && isSuccess(playlists) ? (
-    <PlaylistListInner playlists={playlists.data} {...props} />
-  ) : null;
-}
-
-export function PlaylistListInner(props: Props & { playlists: Playlist[] }) {
   const columns = useMemo<MRT_ColumnDef<Playlist>[]>(
     () => [
       {
@@ -49,7 +43,7 @@ export function PlaylistListInner(props: Props & { playlists: Playlist[] }) {
 
   const table = useCustomizedTable({
     columns,
-    data: props.playlists,
+    data: playlists,
     selected: props.selectedPlaylist,
     setSelected: props.setSelectedPlaylist,
     title: "Playlists",
@@ -92,7 +86,7 @@ export function PlaylistListInner(props: Props & { playlists: Playlist[] }) {
         className: clsx({
           "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":
             !isDetailPanel && staticRowIndex === props.selectedPlaylist,
-          "h-14": !isDetailPanel,
+          "h-14 cursor-pointer": !isDetailPanel,
         }),
         onClick: () => {
           if (!isDetailPanel) {
