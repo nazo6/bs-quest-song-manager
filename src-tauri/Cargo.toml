@@ -1,8 +1,8 @@
 [package]
 name = "bs-quest-song-manager"
 version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Song manager for beatsaber on quest"
+authors = ["nazo6"]
 license = ""
 repository = ""
 edition = "2021"
@@ -38,6 +38,8 @@ tauri-specta = { version = "=2.0.0-rc.4", features = [
   "typescript",
 ] }
 base64 = "0.21.5"
+tauri-plugin-deep-link = "0.1.2"
+url = "2.5.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

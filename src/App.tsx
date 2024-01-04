@@ -4,6 +4,7 @@ import { Config, isSuccess, query } from "./typeUtils";
 import { SetRootDirModal } from "./components/SetRootDir";
 import { useDisclosure } from "@mantine/hooks";
 import { DownloadQueueProvider } from "./components/DownloadQueueContext";
+import { LinkHandler } from "./components/LinkHandler";
 
 export default function App() {
   const { data: config } = useQuery(query("configGet"));
@@ -18,6 +19,7 @@ function AppInner(props: { config: Config }) {
     <div className="h-[100vh]">
       <DownloadQueueProvider>
         <Home />
+        <LinkHandler />
       </DownloadQueueProvider>
       <SetRootDirModal opened={opened} onClose={close} closeable={false} />
     </div>

@@ -76,15 +76,18 @@ try {
 }
 
 export const events = __makeEvents__<{
-scanEvent: ScanEvent
+scanEvent: ScanEvent,
+deepLinkEvent: DeepLinkEvent
 }>({
-scanEvent: "plugin:tauri-specta:scan-event"
+scanEvent: "plugin:tauri-specta:scan-event",
+deepLinkEvent: "plugin:tauri-specta:deep-link-event"
 })
 
 /** user-defined types **/
 
 export type BeatMap = { _difficulty: string; _difficultyRank: number; _beatmapFilename: string }
 export type BeatMapSet = { _difficultyBeatmaps: BeatMap[] }
+export type DeepLinkEvent = { id: string }
 export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[]; _coverImageFilename: string }
 export type ScanEvent = { Level: ScanResult } | { Playlist: ScanResult } | "Completed" | "Started"
 export type ScanResult = { Success: { path: string } } | { Failed: { reason: string; path: string } }

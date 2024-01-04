@@ -1,6 +1,9 @@
 use tauri::{plugin::TauriPlugin, Wry};
 
-use crate::{interface::scan::ScanEvent, state::AppState};
+use crate::{
+    interface::{scan::ScanEvent, DeepLinkEvent},
+    state::AppState,
+};
 
 mod config;
 mod level;
@@ -22,7 +25,7 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
             playlist::playlist_clear,
             scan::scan_start,
         ])
-        .events(tauri_specta::collect_events![ScanEvent]);
+        .events(tauri_specta::collect_events![ScanEvent, DeepLinkEvent]);
 
     #[cfg(debug_assertions)]
     let specta_builder = specta_builder.path("../src/bindings.ts");
