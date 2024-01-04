@@ -12,19 +12,12 @@ export default function App() {
 }
 
 function AppInner(props: { config: Config }) {
-  const { data: levelsRes } = useQuery(query("levelGetAll"));
-  const { data: playlistsRes } = useQuery(query("playlistGetAll"));
-
   const [opened, { close }] = useDisclosure(props.config.mod_root === null);
-
-  const levels = levelsRes && isSuccess(levelsRes) ? levelsRes.data : [];
-  const playlists =
-    playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : [];
 
   return (
     <div className="h-[100vh]">
       <DownloadQueueProvider>
-        <Home levels={levels} playlists={playlists} />
+        <Home />
       </DownloadQueueProvider>
       <SetRootDirModal opened={opened} onClose={close} closeable={false} />
     </div>

@@ -1,16 +1,26 @@
 import { useMemo } from "react";
-import { Playlist } from "../typeUtils";
+import { Playlist, isSuccess, query } from "../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../components/Table";
 import { Chip, Title } from "@mantine/core";
 import { MaybeImage } from "../components/Image";
 import clsx from "clsx";
+import { useQuery } from "@tanstack/react-query";
 
-export function PlaylistList(props: {
-  playlists: Playlist[];
+type Props = {
   selectedPlaylist: number | null | "noPlaylist";
   setSelectedPlaylist: (index: number | null | "noPlaylist") => void;
-}) {
+};
+
+export function PlaylistList(props: Props) {
+  const { data: playlists } = useQuery(query("playlistGetAll"));
+
+  return playlists && isSuccess(playlists) ? (
+    <PlaylistListInner playlists={playlists.data} {...props} />
+  ) : null;
+}
+
+export function PlaylistListInner(props: Props & { playlists: Playlist[] }) {
   const columns = useMemo<MRT_ColumnDef<Playlist>[]>(
     () => [
       {
