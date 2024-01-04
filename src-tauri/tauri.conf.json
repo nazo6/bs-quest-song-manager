@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "bs-quest-song-manager",
+    "productName": "BQSM",
     "version": "0.1.0"
   },
   "tauri": {
@@ -39,7 +39,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "bs-quest-song-manager",
+        "title": "BQSM",
         "width": 800,
         "height": 600
       }

@@ -62,7 +62,7 @@ export function useExtendedPlaylist(
         playlistAuthor: null,
         playlistDescription: null,
       };
-    } else if (selectedPlaylist && playlists[selectedPlaylist]) {
+    } else if (selectedPlaylist !== null && playlists[selectedPlaylist]) {
       const extendedLevels: ExtendedLevel[] = playlists[
         selectedPlaylist
       ]!.songs.map((song, index) => {

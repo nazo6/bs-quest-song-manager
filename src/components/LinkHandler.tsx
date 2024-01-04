@@ -18,8 +18,6 @@ export function LinkHandler() {
     const listener = (async () => {
       return await events.deepLinkEvent.listen((e) => {
         const id = e.payload.id;
-        console.log(e);
-        console.log("Received deep link event", id);
         setToDownload((prev) => [...prev, id]);
         open();
       });
