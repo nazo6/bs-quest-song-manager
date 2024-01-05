@@ -49,7 +49,6 @@ pub async fn build() -> tauri::Builder<Wry> {
             fn get_id(url: &str) -> Result<String, String> {
                 let url = url::Url::parse(url).map_err(|e| format!("{:#}", e))?;
                 let id = url.host_str().ok_or("No id specified")?;
-                dbg!(&url, &id);
                 Ok(id.to_string())
             }
 
