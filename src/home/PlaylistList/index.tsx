@@ -1,11 +1,13 @@
-import { useMemo } from "react";
-import { Playlist, isSuccess, query } from "../typeUtils";
+import { useMemo, useRef } from "react";
+import { Playlist, isSuccess, query } from "../../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
-import { useCustomizedTable } from "../components/Table";
+import { useCustomizedTable } from "../../components/Table";
 import { Chip, Title } from "@mantine/core";
-import { MaybeImage } from "../components/Image";
+import { MaybeImage } from "../../components/Image";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
+import { useContextMenu } from "../../components/contextMenu";
+import { RowActions } from "./RowActions";
 
 export function PlaylistList(props: {
   selectedPlaylist: number | null | "noPlaylist";
@@ -36,6 +38,12 @@ export function PlaylistList(props: {
       {
         accessorFn: (row) => row.songs.length,
         header: "Songs",
+      },
+      {
+        header: "Actions",
+        Cell: ({ row, rowRef }) => (
+          <RowActions row={row.original} rowRef={rowRef} />
+        ),
       },
     ],
     [],

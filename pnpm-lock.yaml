@@ -59,6 +59,9 @@ dependencies:
   react-virtuoso:
     specifier: ^4.6.2
     version: 4.6.2(react-dom@18.2.0)(react@18.2.0)
+  tauri-plugin-context-menu:
+    specifier: ^0.7.0
+    version: 0.7.0
 
 devDependencies:
   '@biomejs/biome':
@@ -2844,6 +2847,12 @@ packages:
     transitivePeerDependencies:
       - ts-node
     dev: true
+
+  /tauri-plugin-context-menu@0.7.0:
+    resolution: {integrity: sha512-NtFyhP2lQrUqs2ZWxw5j75p0K/3+5xPAckKh8yvpn0Bjq6WpKpBRli5chmcP44ltUoHBfXl2yRnpU14G1G5ucg==}
+    dependencies:
+      '@tauri-apps/api': 1.5.3
+    dev: false
 
   /thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}

@@ -4,6 +4,7 @@ import { Config, isSuccess, query } from "./typeUtils";
 import { SetRootDirModal } from "./components/SetRootDir";
 import { useDisclosure } from "@mantine/hooks";
 import { DownloadQueueProvider } from "./components/DownloadQueueContext";
+import { GlobalContextMenu } from "./components/contextMenu";
 
 export default function App() {
   const { data: config } = useQuery(query("configGet"));
@@ -17,6 +18,7 @@ function AppInner(props: { config: Config }) {
   return (
     <div className="h-[100vh]">
       <DownloadQueueProvider>
+        <GlobalContextMenu />
         <Home />
       </DownloadQueueProvider>
       <SetRootDirModal opened={opened} onClose={close} closeable={false} />

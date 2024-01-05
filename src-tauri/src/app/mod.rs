@@ -18,6 +18,7 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
             command::level::level_add_by_hash,
             command::level::level_add_by_id,
             command::level::level_delete,
+            command::misc::open_devtools,
             command::playlist::playlist_get_all,
             command::playlist::playlist_state_clear,
             command::playlist::playlist_add_level,
@@ -41,6 +42,7 @@ pub async fn build() -> tauri::Builder<Wry> {
                 .expect("Failed to init state!"),
         )
         .plugin(specta_plugin())
+        .plugin(tauri_plugin_context_menu::init())
         .setup(|app| {
             fn get_id(url: &str) -> Result<String, String> {
                 let url = url::Url::parse(url).map_err(|e| format!("{:#}", e))?;

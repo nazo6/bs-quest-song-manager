@@ -12,6 +12,8 @@ import "@mantine/dates/styles.css";
 import "mantine-react-table/styles.css";
 import "./styles.css";
 
+window.document.oncontextmenu = () => false;
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

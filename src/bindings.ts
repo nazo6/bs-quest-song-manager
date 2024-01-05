@@ -80,6 +80,14 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
+async openDevtools() : Promise<__Result__<null, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|open_devtools") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async playlistGetAll() : Promise<__Result__<({ playlistTitle: string; playlistAuthor: string | null; playlistDescription: string | null; image: string | null; imageString: string | null; songs: Song[]; path: string })[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_get_all") };
