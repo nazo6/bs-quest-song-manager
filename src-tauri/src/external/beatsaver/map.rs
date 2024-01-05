@@ -43,23 +43,27 @@ pub struct MapStats {
 
 pub async fn get_map_by_hash(hash: &str) -> Result<MapDetail> {
     let endpoint = format!("{}/maps/hash/{}", BASE_URL, hash);
-    let res: MapDetail = reqwest::get(&endpoint)
+    let res = reqwest::get(&endpoint)
         .await
         .wrap_err("Failed to fetch")?
-        .json()
+        .text()
         .await
-        .wrap_err("Failed to parse json")?;
+        .wrap_err("Failed to read text")?;
+    let jd = &mut serde_json::Deserializer::from_str(&res);
+    let res: MapDetail = serde_path_to_error::deserialize(jd).wrap_err("Failed to parse json")?;
     Ok(res)
 }
 
 pub async fn get_map_by_id(id: &str) -> Result<MapDetail> {
     let endpoint = format!("{}/maps/id/{}", BASE_URL, id);
-    let res: MapDetail = reqwest::get(&endpoint)
+    let res = reqwest::get(&endpoint)
         .await
         .wrap_err("Failed to fetch")?
-        .json()
+        .text()
         .await
-        .wrap_err("Failed to parse json")?;
+        .wrap_err("Failed to read text")?;
+    let jd = &mut serde_json::Deserializer::from_str(&res);
+    let res: MapDetail = serde_path_to_error::deserialize(jd).wrap_err("Failed to parse json")?;
     Ok(res)
 }
 

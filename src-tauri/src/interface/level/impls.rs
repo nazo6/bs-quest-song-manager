@@ -1,16 +1,13 @@
 use base64::Engine;
-use eyre::{Context, ContextCompat, Result};
+use eyre::{Context, Result};
 use std::path::Path;
 
-use crate::{
-    cache::CACHE, external::beatsaver::map::MapDetail, interface::level::LevelInfo,
-    utils::sha1_hash,
-};
+use crate::{interface::level::LevelInfo, utils::sha1_hash};
 
 use super::Level;
 
 impl Level {
-    async fn load_raw(level_dir: &Path, remote_info: Option<MapDetail>) -> Result<Self> {
+    pub async fn load(level_dir: &Path) -> Result<Self> {
         let info_path = level_dir.join("Info.dat");
         let info_str = tokio::fs::read_to_string(&info_path)
             .await
@@ -50,32 +47,7 @@ impl Level {
             info,
             image_string,
             path: level_dir.to_owned(),
-            remote_info,
         })
-    }
-    pub async fn load(level_dir: &Path, default_remote_info: Option<MapDetail>) -> Result<Self> {
-        let dirname = level_dir
-            .file_name()
-            .wrap_err("Failed to find dirname")?
-            .to_str()
-            .wrap_err("Failed to convert dirname to str")?;
-
-        let level = match CACHE.get_level_by_dirname(dirname).await {
-            Ok(level) => level,
-            Err(_) => {
-                let level = Self::load_raw(level_dir, default_remote_info).await?;
-                CACHE
-                    .set_level_hash_by_dirname(dirname, &level.hash)
-                    .await
-                    .wrap_err("Failed to write level hash to cache")?;
-                CACHE
-                    .set_level(&level)
-                    .await
-                    .wrap_err("Failed to write level to cache")?;
-                level
-            }
-        };
-        Ok(level)
     }
 }
 
@@ -89,7 +61,7 @@ mod test {
     async fn level_load_1() {
         let mut level_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         level_path.push("test-data/level/1ac0f");
-        let level = Level::load(&level_path, None).await.unwrap();
+        let level = Level::load(&level_path).await.unwrap();
         assert_eq!(level.hash, "84bcff4756ac66bf1746824b0b221eb1e6a4aff2");
     }
 }

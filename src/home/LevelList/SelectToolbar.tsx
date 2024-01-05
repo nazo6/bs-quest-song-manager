@@ -51,7 +51,6 @@ export function SelectToolbar({
               (s) =>
                 !selected.rows.some((r) => r.original.song.hash === s.hash),
             );
-            console.log(newPlaylist);
             await updatePlaylist({ playlistId, newPlaylist });
             table.resetRowSelection();
             notifications.show({

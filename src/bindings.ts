@@ -28,7 +28,7 @@ try {
 /**
  * Return current level state.
  */
-async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string } }, string>> {
+async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_string: string; info: LevelInfo; path: string } }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_get_all") };
 } catch (e) {
@@ -48,9 +48,9 @@ try {
 }
 },
 /**
- * Search, download add level to state and disk.
+ * Search, download and add level to state and disk.
  */
-async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string }, string>> {
+async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_hash", { hash }) };
 } catch (e) {
@@ -59,9 +59,9 @@ try {
 }
 },
 /**
- * Search, download add level to state and disk.
+ * Search, download and add level to state and disk.
  */
-async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; remote_info: MapDetail | null; path: string }, string>> {
+async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_id", { id }) };
 } catch (e) {
@@ -75,6 +75,18 @@ try {
 async levelDelete(hash: string) : Promise<__Result__<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_delete", { hash }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Fetch map deailt from beatsaver and update state.
+ * See [`crate::external::beatsaver::map::MapDetail`].
+ */
+async levelFetchRemote(hash: string) : Promise<__Result__<{ versions: MapVersion[]; id: string; description: string; stats: MapStats; ranked: boolean; createdAt: string; updatedAt: string; lastPublishedAt: string }, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_fetch_remote", { hash }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -148,7 +160,6 @@ export type BeatMap = { _difficulty: string; _difficultyRank: number; _beatmapFi
 export type BeatMapSet = { _difficultyBeatmaps: BeatMap[] }
 export type DeepLinkEvent = { id: string }
 export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[]; _coverImageFilename: string }
-export type MapDetail = { versions: MapVersion[]; id: string; description: string; stats: MapStats; ranked: boolean; createdAt: string; updatedAt: string; lastPublishedAt: string }
 export type MapStats = { plays: number; downloads: number; upvotes: number; downvotes: number; 
 /**
  * 0 to 1 ?

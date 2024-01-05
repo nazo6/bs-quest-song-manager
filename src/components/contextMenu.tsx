@@ -27,7 +27,7 @@ export function GlobalContextMenu() {
     return () => window.removeEventListener("contextmenu", listener);
   }, [listener]);
 
-  return <> </>;
+  return <></>;
 }
 
 export function useContextMenu(
@@ -52,7 +52,6 @@ export function useContextMenus(
 ) {
   useEffect(() => {
     const listener = async (e: MouseEvent) => {
-      console.log(e);
       e.preventDefault();
       showMenu(menu);
     };

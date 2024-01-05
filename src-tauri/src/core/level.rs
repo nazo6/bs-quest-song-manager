@@ -4,8 +4,9 @@ use eyre::Context;
 use tracing::info;
 
 use crate::{
+    cache::CACHE,
     constant::TEMP_DIR,
-    external::beatsaver,
+    external::beatsaver::{self, map::MapDetail},
     interface::{config::ModRoot, level::Level},
     utils::sha1_hash,
 };
@@ -44,9 +45,21 @@ async fn install_level(download_url: &str, extract_dir: &Path) -> eyre::Result<(
     Ok(())
 }
 
+#[tracing::instrument(err)]
+pub async fn fetch_remote(hash: &str) -> eyre::Result<MapDetail> {
+    let res = if let Ok(res) = CACHE.get_remote_level_by_hash(hash).await {
+        res
+    } else {
+        let res = beatsaver::map::get_map_by_hash(hash).await?;
+        CACHE.set_remote_level(hash, &res).await?;
+        res
+    };
+    Ok(res)
+}
+
 #[tracing::instrument(skip(root_dir), err)]
-pub async fn get_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
-    let res = beatsaver::map::get_map_by_hash(&hash).await?;
+pub async fn install_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
+    let res = fetch_remote(&hash).await?;
     let download_url = &res
         .versions
         .last()
@@ -56,7 +69,7 @@ pub async fn get_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
 
     install_level(download_url, &level_dir).await?;
-    let level = Level::load(&level_dir, Some(res)).await?;
+    let level = Level::load(&level_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
 
@@ -64,8 +77,28 @@ pub async fn get_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result
 }
 
 #[tracing::instrument(skip(root_dir), err)]
-pub async fn get_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level> {
-    let res = beatsaver::map::get_map_by_id(id).await?;
+pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level> {
+    let res = if let Ok(hash) = CACHE.get_level_hash_by_id(id).await {
+        if let Ok(res) = CACHE.get_remote_level_by_hash(&hash).await {
+            Some(res)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    let res = if let Some(res) = res {
+        res
+    } else {
+        let res = beatsaver::map::get_map_by_id(id).await?;
+        let version = res
+            .versions
+            .last()
+            .ok_or_else(|| eyre::eyre!("No versions"))?;
+        CACHE.set_remote_level(&version.hash, &res).await?;
+        CACHE.set_level_hash_by_id(id, &version.hash).await?;
+        res
+    };
     let version = &res
         .versions
         .last()
@@ -74,7 +107,7 @@ pub async fn get_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", version.hash));
 
     install_level(&version.download_url, &level_dir).await?;
-    let level = Level::load(&level_dir, Some(res)).await?;
+    let level = Level::load(&level_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
 

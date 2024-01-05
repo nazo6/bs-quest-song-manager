@@ -1,15 +1,34 @@
 import { Table, Title } from "@mantine/core";
-import { MaybeImage } from "../../components/Image";
+import { MaybeImage, base64ToImgSrc } from "../../components/Image";
 import { MaybeMissingLevel } from "./useExtendedPlaylist";
+import { useQuery } from "@tanstack/react-query";
+import { commands } from "../../bindings";
+import { isSuccess } from "../../typeUtils";
 
-export function DetailPanel({ row }: { row: MaybeMissingLevel }) {
+export function DetailPanel({
+  row,
+  isOpen,
+}: { row: MaybeMissingLevel; isOpen: boolean }) {
+  const { data: remoteInfo, isLoading } = useQuery({
+    queryFn: () => commands.levelFetchRemote(row.song.hash),
+    queryKey: ["levelFetchRemote", row.song.hash],
+    enabled: isOpen,
+  });
+
   const level = row.missing ? null : row.level;
+
+  let imageUrl: string | null = null;
+  if (level?.image_string) {
+    imageUrl = base64ToImgSrc(level.image_string);
+  } else if (remoteInfo && isSuccess(remoteInfo)) {
+    const latestVersion =
+      remoteInfo.data.versions[remoteInfo.data.versions.length - 1];
+    imageUrl = latestVersion?.coverURL ?? null;
+  }
+
   return (
     <div className="flex gap-2">
-      <MaybeImage
-        imageString={level?.image_string}
-        className="size-20 lg:size-44 flex-shrink-0"
-      />
+      <MaybeImage src={imageUrl} className="size-20 lg:size-44 flex-shrink-0" />
       <Table>
         <Table.Tbody>
           <Table.Tr>
@@ -43,6 +62,18 @@ export function DetailPanel({ row }: { row: MaybeMissingLevel }) {
             <Table.Td>hash</Table.Td>
             <Table.Td>{row.song.hash}</Table.Td>
           </Table.Tr>
+          {isLoading ? (
+            <div>loading beatsaver...</div>
+          ) : remoteInfo && isSuccess(remoteInfo) ? (
+            <Table.Tr>
+              <Table.Td>beatsaver id</Table.Td>
+              <Table.Td>{remoteInfo.data.id}</Table.Td>
+            </Table.Tr>
+          ) : (
+            <Table.Tr>
+              <Table.Td>Failed to load beatsaver data</Table.Td>
+            </Table.Tr>
+          )}
         </Table.Tbody>
       </Table>
     </div>

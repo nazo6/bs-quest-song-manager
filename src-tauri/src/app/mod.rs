@@ -18,6 +18,7 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
             command::level::level_add_by_hash,
             command::level::level_add_by_id,
             command::level::level_delete,
+            command::level::level_fetch_remote,
             command::misc::open_devtools,
             command::playlist::playlist_get_all,
             command::playlist::playlist_state_clear,

@@ -1,13 +1,17 @@
 import clsx from "clsx";
 
+export function base64ToImgSrc(base64: string | null) {
+  return base64 ? `data:image/png;base64,${base64}` : null;
+}
+
 export function MaybeImage(props: {
-  imageString?: string | null;
+  src?: string | null;
   alt?: string;
   className?: string;
 }) {
-  return props.imageString ? (
+  return props.src ? (
     <img
-      src={`data:image/png;base64,${props.imageString}`}
+      src={props.src}
       alt={props.alt}
       className={clsx("border-solid border", props.className)}
     />

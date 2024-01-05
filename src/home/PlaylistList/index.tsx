@@ -3,7 +3,7 @@ import { Playlist, isSuccess, query } from "../../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
 import { Chip, Title } from "@mantine/core";
-import { MaybeImage } from "../../components/Image";
+import { MaybeImage, base64ToImgSrc } from "../../components/Image";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { RowActions } from "./RowActions";
@@ -23,7 +23,7 @@ export function PlaylistList(props: {
           return (
             <div className="flex items-center h-full">
               <MaybeImage
-                imageString={row.info.imageString}
+                src={base64ToImgSrc(row.info.imageString)}
                 className="size-10"
               />
             </div>
@@ -34,7 +34,7 @@ export function PlaylistList(props: {
         enableColumnOrdering: false,
       },
       {
-        accessorKey: "playlistTitle",
+        accessorKey: "info.playlistTitle",
         header: "Title",
       },
       {
@@ -75,7 +75,7 @@ export function PlaylistList(props: {
     renderDetailPanel: ({ row }) => (
       <div className="flex gap-2">
         <MaybeImage
-          imageString={row.original.info.imageString}
+          src={base64ToImgSrc(row.original.info.imageString)}
           className="size-20 lg:size-44 flex-shrink-0"
         />
         <div className="flex flex-col *:m-0">
@@ -89,7 +89,7 @@ export function PlaylistList(props: {
         </div>
       </div>
     ),
-    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex, row }) => {
+    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex }) => {
       return {
         className: clsx({
           "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":

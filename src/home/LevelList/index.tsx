@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
-import { MaybeImage } from "../../components/Image";
+import { MaybeImage, base64ToImgSrc } from "../../components/Image";
 import { RowActions } from "./RowActions";
 import { MaybeMissingLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
 import { DetailPanel } from "./DetailPanel";
@@ -34,7 +34,9 @@ export function LevelList({
           return (
             <div className="flex items-center h-full">
               <MaybeImage
-                imageString={row.missing ? null : row.level.image_string}
+                src={
+                  row.missing ? null : base64ToImgSrc(row.level.image_string)
+                }
                 className="size-10"
               />
             </div>
@@ -64,7 +66,9 @@ export function LevelList({
         playlist={playlist}
       />
     ),
-    renderDetailPanel: ({ row }) => <DetailPanel row={row.original} />,
+    renderDetailPanel: ({ row }) => (
+      <DetailPanel isOpen={row.getIsExpanded()} row={row.original} />
+    ),
     mantineTableBodyRowProps: ({ isDetailPanel, row }) => {
       return {
         className:

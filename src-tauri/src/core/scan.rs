@@ -1,13 +1,43 @@
+use std::path::Path;
+
 use eyre::{Context, Result};
 use futures::StreamExt;
 use tauri_specta::Event;
 
-use crate::interface::{
-    config::ModRoot,
-    level::{Level, LevelMap},
-    playlist::Playlist,
-    scan::{ScanEvent, ScanResult},
+use crate::{
+    cache::CACHE,
+    interface::{
+        config::ModRoot,
+        level::{Level, LevelMap},
+        playlist::Playlist,
+        scan::{ScanEvent, ScanResult},
+    },
 };
+
+async fn load_level_with_cache(path: &Path) -> Result<Level> {
+    let dirname = path
+        .file_name()
+        .ok_or_else(|| eyre::eyre!("Failed to find dirname"))?
+        .to_str()
+        .ok_or_else(|| eyre::eyre!("Failed to convert dirname to str"))?;
+
+    let level = match CACHE.get_level_by_dirname(dirname).await {
+        Ok(level) => level,
+        Err(_) => {
+            let level = Level::load(path).await?;
+            CACHE
+                .set_level_hash_by_dirname(dirname, &level.hash)
+                .await
+                .wrap_err("Failed to write level hash to cache")?;
+            CACHE
+                .set_level(&level)
+                .await
+                .wrap_err("Failed to write level to cache")?;
+            level
+        }
+    };
+    Ok(level)
+}
 
 #[tracing::instrument(skip_all, err)]
 pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<LevelMap> {
@@ -28,8 +58,7 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
     let level_get_futures = level_folders.into_iter().map(|path| {
         let handle = handle.clone();
         async move {
-            let level = Level::load(&path, None).await;
-
+            let level = load_level_with_cache(&path).await;
             match level {
                 Ok(level) => {
                     ScanEvent::Level(ScanResult::Success {

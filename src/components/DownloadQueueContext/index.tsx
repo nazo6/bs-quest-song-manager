@@ -9,18 +9,22 @@ const DownloadQueueContext = createContext<ReturnType<
 export const DownloadQueueProvider = (props: { children: ReactNode }) => {
   const queue = useDownloadQueue();
 
-  const didMount = useRef(false);
+  const runCount = useRef(0);
   useEffect(() => {
-    if (didMount.current) {
-      if (queue.waiting.length === 0 && queue.running.length === 0) {
+    if (runCount.current) {
+      if (
+        runCount.current !== 0 &&
+        queue.waiting.length === 0 &&
+        queue.running.length === 0
+      ) {
         notifications.show({
           title: "Download Queue",
           message: "All downloads finished",
         });
       }
-    } else {
-      didMount.current = true;
     }
+
+    runCount.current = queue.running.length + queue.waiting.length;
   }, [queue.waiting, queue.running]);
 
   return (

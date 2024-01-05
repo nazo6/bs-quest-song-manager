@@ -16,14 +16,14 @@ export function RowActions({ row }: { row: Playlist }) {
       {
         is_separator: true,
       },
-      {
-        label: "Delete",
-        event: () => {
-          console.log("delete");
-        },
-      },
+      // {
+      //   label: "Delete",
+      //   event: () => {
+      //     console.log("delete");
+      //   },
+      // },
     ],
   });
 
-  return <div ref={ref}>a</div>;
+  return <div ref={ref} />;
 }
