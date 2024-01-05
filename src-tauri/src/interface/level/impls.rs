@@ -12,8 +12,10 @@ impl Level {
         let info_str = tokio::fs::read_to_string(&info_path)
             .await
             .wrap_err_with(|| format!("Failed to read info.dat at {:?}", info_path))?;
+
         let info: LevelInfo =
             serde_json::from_str(&info_str).wrap_err("Failed to parse info.dat")?;
+
         let difficulty_files = info
             .difficulty_beatmap_sets
             .iter()
@@ -31,21 +33,21 @@ impl Level {
         .await
         .wrap_err("Failed to read difficulty files")?;
 
-        let hash = sha1_hash(&(info_str + &difficulty_strs.join("")));
+        let hash =
+            tokio::task::spawn_blocking(move || sha1_hash(&(info_str + &difficulty_strs.join(""))))
+                .await
+                .unwrap();
 
-        let image_string = {
+        let image_path = {
             let mut image_path = level_dir.to_owned();
             image_path.push(&info.cover_image_filename);
-            let image_bytes = tokio::fs::read(&image_path)
-                .await
-                .wrap_err_with(|| format!("Failed to read image at {:?}", image_path))?;
-            base64::engine::general_purpose::STANDARD.encode(image_bytes)
+            image_path
         };
 
         Ok(Self {
             hash,
             info,
-            image_string,
+            image_path,
             path: level_dir.to_owned(),
         })
     }

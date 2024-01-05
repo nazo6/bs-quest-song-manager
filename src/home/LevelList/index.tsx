@@ -1,13 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
-import { MaybeImage, base64ToImgSrc } from "../../components/Image";
+import { MaybeImage } from "../../components/Image";
 import { RowActions } from "./RowActions";
 import { MaybeMissingLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
 import { DetailPanel } from "./DetailPanel";
 import { Toolbar } from "./Toolbar";
 import { SelectToolbar } from "./SelectToolbar";
 import { SelectedPlaylist } from "..";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 export function LevelList({
   selectedPlaylist,
@@ -34,9 +35,7 @@ export function LevelList({
           return (
             <div className="flex items-center h-full">
               <MaybeImage
-                src={
-                  row.missing ? null : base64ToImgSrc(row.level.image_string)
-                }
+                src={row.missing ? null : convertFileSrc(row.level.image_path)}
                 className="size-10"
               />
             </div>

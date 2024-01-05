@@ -9,11 +9,13 @@ use crate::interface::scan::ScanEvent;
 use super::macros::ensure_mod_root;
 use super::{IntoMsg, State};
 
-#[tracing::instrument(skip(state, handle), err, ret)]
+#[tracing::instrument(skip(state, handle), err)]
 #[tauri::command]
 #[specta::specta]
 pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), String> {
     let root = ensure_mod_root!(state);
+
+    tracing::info!("Scanning {:?}", &root.0);
 
     let send_event = |event: ScanEvent| event.emit_all(&handle).unwrap();
 
@@ -37,6 +39,8 @@ pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), Strin
     *state.playlists.write().await = playlists;
 
     send_event(ScanEvent::Completed);
+
+    tracing::info!("Scan completed");
 
     Ok(())
 }

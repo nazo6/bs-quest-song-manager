@@ -28,7 +28,7 @@ try {
 /**
  * Return current level state.
  */
-async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_string: string; info: LevelInfo; path: string } }, string>> {
+async levelGetAll() : Promise<__Result__<{ [key in string]: { hash: string; image_path: string; info: LevelInfo; path: string } }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_get_all") };
 } catch (e) {
@@ -50,7 +50,7 @@ try {
 /**
  * Search, download and add level to state and disk.
  */
-async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
+async levelAddByHash(hash: string) : Promise<__Result__<{ hash: string; image_path: string; info: LevelInfo; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_hash", { hash }) };
 } catch (e) {
@@ -61,7 +61,7 @@ try {
 /**
  * Search, download and add level to state and disk.
  */
-async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_string: string; info: LevelInfo; path: string }, string>> {
+async levelAddById(id: string) : Promise<__Result__<{ hash: string; image_path: string; info: LevelInfo; path: string }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|level_add_by_id", { id }) };
 } catch (e) {

@@ -24,7 +24,7 @@ pub static CACHE_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let path = dirs::data_local_dir()
         .unwrap()
         .join("bs-quest-mod-manager")
-        .join("cache");
+        .join("cache-sled");
     std::fs::create_dir_all(&path).unwrap();
     path
 });

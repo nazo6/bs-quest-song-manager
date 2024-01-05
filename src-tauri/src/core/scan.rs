@@ -57,7 +57,7 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
 
     let level_get_futures = level_folders.into_iter().map(|path| {
         let handle = handle.clone();
-        async move {
+        tokio::spawn(async move {
             let level = load_level_with_cache(&path).await;
             match level {
                 Ok(level) => {
@@ -78,14 +78,15 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
                     None
                 }
             }
-        }
+        })
     });
 
     let levels = futures::stream::iter(level_get_futures)
-        .buffer_unordered(10)
+        .buffer_unordered(500)
         .collect::<Vec<_>>()
         .await
         .into_iter()
+        .flatten()
         .flatten()
         .collect::<LevelMap>();
 

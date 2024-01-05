@@ -9,7 +9,7 @@ mod impls;
 #[derive(Debug, Serialize, Deserialize, specta::Type, Clone)]
 pub struct Level {
     pub hash: String,
-    pub image_string: String,
+    pub image_path: PathBuf,
     pub info: LevelInfo,
     pub path: PathBuf,
 }

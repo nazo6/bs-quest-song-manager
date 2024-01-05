@@ -1,5 +1,6 @@
 use eyre::Result;
 use once_cell::sync::Lazy;
+use tracing::debug;
 
 use crate::{constant::CACHE_DIR, external::beatsaver::map::MapDetail, interface::level::Level};
 
@@ -101,7 +102,7 @@ impl Cache {
 }
 
 pub static CACHE: Lazy<Cache> = Lazy::new(|| {
-    let mut builder = opendal::services::Cacache::default();
+    let mut builder = opendal::services::Sled::default();
     builder.datadir(CACHE_DIR.to_str().unwrap());
 
     Cache(opendal::Operator::new(builder).unwrap().finish())

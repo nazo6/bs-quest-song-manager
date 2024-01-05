@@ -1,9 +1,10 @@
 import { Table, Title } from "@mantine/core";
-import { MaybeImage, base64ToImgSrc } from "../../components/Image";
+import { MaybeImage } from "../../components/Image";
 import { MaybeMissingLevel } from "./useExtendedPlaylist";
 import { useQuery } from "@tanstack/react-query";
 import { commands } from "../../bindings";
 import { isSuccess } from "../../typeUtils";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 export function DetailPanel({
   row,
@@ -18,8 +19,8 @@ export function DetailPanel({
   const level = row.missing ? null : row.level;
 
   let imageUrl: string | null = null;
-  if (level?.image_string) {
-    imageUrl = base64ToImgSrc(level.image_string);
+  if (level?.image_path) {
+    imageUrl = convertFileSrc(level.image_path);
   } else if (remoteInfo && isSuccess(remoteInfo)) {
     const latestVersion =
       remoteInfo.data.versions[remoteInfo.data.versions.length - 1];
@@ -63,7 +64,9 @@ export function DetailPanel({
             <Table.Td>{row.song.hash}</Table.Td>
           </Table.Tr>
           {isLoading ? (
-            <div>loading beatsaver...</div>
+            <Table.Tr>
+              <Table.Td>loading beatsaver data...</Table.Td>
+            </Table.Tr>
           ) : remoteInfo && isSuccess(remoteInfo) ? (
             <Table.Tr>
               <Table.Td>beatsaver id</Table.Td>
