@@ -1,5 +1,6 @@
-import { ReactNode, createContext, useContext } from "react";
+import { ReactNode, createContext, useContext, useEffect, useRef } from "react";
 import { useDownloadQueue } from "./DownloadQueue";
+import { notifications } from "@mantine/notifications";
 
 const DownloadQueueContext = createContext<ReturnType<
   typeof useDownloadQueue
@@ -7,6 +8,20 @@ const DownloadQueueContext = createContext<ReturnType<
 
 export const DownloadQueueProvider = (props: { children: ReactNode }) => {
   const queue = useDownloadQueue();
+
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (didMount.current) {
+      if (queue.waiting.length === 0 && queue.running.length === 0) {
+        notifications.show({
+          title: "Download Queue",
+          message: "All downloads finished",
+        });
+      }
+    } else {
+      didMount.current = true;
+    }
+  }, [queue.waiting, queue.running]);
 
   return (
     <DownloadQueueContext.Provider value={queue}>

@@ -1,18 +1,18 @@
 import { useEffect, useMemo } from "react";
-import { Button } from "@mantine/core";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
 import { MaybeImage } from "../../components/Image";
 import { RowActions } from "./RowActions";
-import { ExtendedLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
+import { MaybeMissingLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
 import { DetailPanel } from "./DetailPanel";
-import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
-import { AddLevel } from "./AddLevel";
+import { Toolbar } from "./Toolbar";
+import { SelectToolbar } from "./SelectToolbar";
+import { SelectedPlaylist } from "..";
 
 export function LevelList({
   selectedPlaylist,
 }: {
-  selectedPlaylist: number | null | "noPlaylist";
+  selectedPlaylist: SelectedPlaylist;
 }) {
   const playlist = useExtendedPlaylist(selectedPlaylist);
 
@@ -20,9 +20,7 @@ export function LevelList({
     return playlist.extendedLevels.filter((l) => l.missing);
   }, [playlist]);
 
-  const { queue } = useDownloadQueueContext();
-
-  const columns = useMemo<MRT_ColumnDef<ExtendedLevel>[]>(() => {
+  const columns = useMemo<MRT_ColumnDef<MaybeMissingLevel>[]>(() => {
     return [
       {
         header: "#",
@@ -58,31 +56,13 @@ export function LevelList({
   const table = useCustomizedTable({
     columns,
     data: playlist.extendedLevels,
-    title: playlist.playlistTitle,
+    title: playlist.info.playlistTitle,
     customToolbar: (
-      <div className="flex gap-2">
-        <Button
-          size="xs"
-          onClick={() => {
-            for (const l of missingLevels) {
-              queue.enqueue({
-                hash: l.song.hash,
-                type: "hash",
-              });
-            }
-          }}
-          disabled={missingLevels.length === 0}
-        >
-          {missingLevels.length === 0
-            ? "No missing levels"
-            : `Download missing ${missingLevels.length} levels`}
-        </Button>
-        <AddLevel
-          playlistId={
-            typeof selectedPlaylist === "number" ? selectedPlaylist : null
-          }
-        />
-      </div>
+      <Toolbar
+        missingLevels={missingLevels}
+        selectedPlaylist={selectedPlaylist}
+        playlist={playlist}
+      />
     ),
     renderDetailPanel: ({ row }) => <DetailPanel row={row.original} />,
     mantineTableBodyRowProps: ({ isDetailPanel, row }) => {
@@ -98,6 +78,13 @@ export function LevelList({
         },
       };
     },
+    renderToolbarAlertBannerContent: ({ table }) => (
+      <SelectToolbar
+        table={table}
+        playlist={playlist}
+        playlistId={selectedPlaylist}
+      />
+    ),
   });
 
   // biome-ignore lint/correctness/useExhaustiveDependencies:

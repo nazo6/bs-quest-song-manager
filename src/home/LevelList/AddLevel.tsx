@@ -1,11 +1,16 @@
-import { Button, Checkbox, Input, Modal, Tooltip } from "@mantine/core";
+import { Button, Checkbox, Input, Popover, Tooltip } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
 import { useState } from "react";
+import { ExtendedPlaylist } from "./useExtendedPlaylist";
+import { SelectedPlaylist } from "..";
 
-export function AddLevel(props: { playlistId: number | null }) {
-  const [opened, { close: closeDialog, open }] = useDisclosure(false);
+export function AddLevel(props: {
+  playlistId: SelectedPlaylist;
+  playlist: ExtendedPlaylist;
+}) {
+  const [opened, { close: closeDialog, toggle }] = useDisclosure(false);
   const { queue } = useDownloadQueueContext();
 
   const [songId, setSongId] = useState<string>("");
@@ -18,20 +23,21 @@ export function AddLevel(props: { playlistId: number | null }) {
   };
 
   return (
-    <>
-      <Tooltip label="Change root folder">
-        <Button
-          classNames={{ label: "flex gap-2" }}
-          size="xs"
-          onClick={open}
-          className="px-2"
-        >
-          <IconPlus className="size-5 flex-shrink-0" />
-          <p>Add level</p>
-        </Button>
-      </Tooltip>
-
-      <Modal opened={opened} onClose={close} title="Add song">
+    <Popover opened={opened} withArrow>
+      <Popover.Target>
+        <Tooltip label="Change root folder">
+          <Button
+            classNames={{ label: "flex gap-2" }}
+            size="xs"
+            onClick={toggle}
+            className="px-2"
+          >
+            <IconPlus className="size-5 flex-shrink-0" />
+            <p>Add level</p>
+          </Button>
+        </Tooltip>
+      </Popover.Target>
+      <Popover.Dropdown className="shadow-xl bg-gray-200 dark:bg-gray-800">
         <div className="flex flex-col gap-3">
           <Input
             placeholder="song id"
@@ -41,7 +47,12 @@ export function AddLevel(props: { playlistId: number | null }) {
             <Checkbox
               checked={downloadToPlaylist}
               onChange={(e) => setDownloadToPlaylist(e.currentTarget.checked)}
-              label="Download to playlist"
+              label={
+                <>
+                  Download to playlist:{" "}
+                  <strong>{props.playlist.info.playlistTitle}</strong>
+                </>
+              }
             />
           )}
           <Button
@@ -50,15 +61,18 @@ export function AddLevel(props: { playlistId: number | null }) {
               queue.enqueue({
                 type: "id",
                 id: songId,
-                playlistId: props.playlistId ?? undefined,
+                playlistId:
+                  typeof props.playlistId === "number"
+                    ? props.playlistId
+                    : undefined,
               });
               close();
             }}
           >
-            Queue
+            Apply
           </Button>
         </div>
-      </Modal>
-    </>
+      </Popover.Dropdown>
+    </Popover>
   );
 }

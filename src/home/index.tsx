@@ -6,6 +6,8 @@ import { LevelList } from "./LevelList";
 import { Topbar } from "./Topbar";
 import { LinkHandler } from "../components/LinkHandler";
 
+export type SelectedPlaylist = number | null | "noPlaylist";
+
 export function Home() {
   return (
     <div className="flex flex-col h-full">
@@ -16,9 +18,8 @@ export function Home() {
 }
 
 function Main() {
-  const [selectedPlaylist, setSelectedPlaylist] = useState<
-    number | null | "noPlaylist"
-  >(null);
+  const [selectedPlaylist, setSelectedPlaylist] =
+    useState<SelectedPlaylist>(null);
 
   return (
     <div className="flex-grow relative min-h-0">

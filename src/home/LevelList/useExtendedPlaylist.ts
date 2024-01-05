@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Level, isSuccess, query } from "../../typeUtils";
-import { Song } from "../../bindings";
+import { PlaylistInfo, Song } from "../../bindings";
 import { useMemo } from "react";
 
-export type ExtendedLevel =
+export type MaybeMissingLevel =
   | {
       missing: false;
       level: Level;
@@ -17,11 +17,8 @@ export type ExtendedLevel =
     };
 
 export type ExtendedPlaylist = {
-  playlistTitle: string;
-  extendedLevels: ExtendedLevel[];
-  imageString: string | null;
-  playlistAuthor: string | null;
-  playlistDescription: string | null;
+  info: PlaylistInfo;
+  extendedLevels: MaybeMissingLevel[];
 };
 
 export function useExtendedPlaylist(
@@ -38,34 +35,44 @@ export function useExtendedPlaylist(
     if (selectedPlaylist === "noPlaylist") {
       const hashs = new Set(Object.keys(levels));
       for (const playlist of playlists) {
-        for (const song of playlist.songs) {
+        for (const song of playlist.info.songs) {
           hashs.delete(song.hash);
         }
       }
 
+      const extendedLevels: MaybeMissingLevel[] = [];
+      const songs: Song[] = [];
+
+      Array.from(hashs).forEach((hash, i) => {
+        const level = levels[hash]!;
+        const song = {
+          hash,
+          songName: level.info._songName,
+        };
+        songs.push(song);
+        extendedLevels.push({
+          missing: false,
+          level,
+          index: i,
+          song,
+        });
+      });
+
       return {
-        playlistTitle: "Level not in any playlist",
-        extendedLevels: Array.from(hashs).map((hash, i) => {
-          const level = levels[hash]!;
-          return {
-            missing: false,
-            level,
-            index: i,
-            song: {
-              key: null,
-              hash,
-              songName: level.info._songName,
-            },
-          };
-        }),
-        imageString: null,
-        playlistAuthor: null,
-        playlistDescription: null,
-      };
+        info: {
+          playlistTitle: "Level not in any playlist",
+          imageString: null,
+          playlistAuthor: null,
+          playlistDescription: null,
+          songs,
+          image: null,
+        },
+        extendedLevels,
+      } satisfies ExtendedPlaylist;
     } else if (selectedPlaylist !== null && playlists[selectedPlaylist]) {
-      const extendedLevels: ExtendedLevel[] = playlists[
+      const extendedLevels: MaybeMissingLevel[] = playlists[
         selectedPlaylist
-      ]!.songs.map((song, index) => {
+      ]!.info.songs.map((song, index) => {
         const level = levels[song.hash];
         if (level) {
           return {
@@ -85,29 +92,34 @@ export function useExtendedPlaylist(
       return {
         extendedLevels,
         ...playlists[selectedPlaylist]!,
-      };
+      } satisfies ExtendedPlaylist;
     } else {
-      const extendedLevels: ExtendedLevel[] = Object.keys(levels).map(
-        (level, index) => {
-          return {
-            missing: false,
-            level: levels[level]!,
-            index,
-            song: {
-              key: null,
-              hash: levels[level]!.hash,
-              songName: levels[level]!.info._songName,
-            },
-          };
-        },
-      );
+      const extendedLevels: MaybeMissingLevel[] = [];
+      const songs: Song[] = [];
+      Object.keys(levels).forEach((level, index) => {
+        const song = {
+          hash: levels[level]!.hash,
+          songName: levels[level]!.info._songName,
+        };
+        songs.push(song);
+        extendedLevels.push({
+          missing: false,
+          level: levels[level]!,
+          index,
+          song,
+        });
+      });
       return {
-        playlistTitle: "All levels",
+        info: {
+          playlistTitle: "All levels",
+          imageString: null,
+          playlistAuthor: null,
+          playlistDescription: null,
+          songs,
+          image: null,
+        },
         extendedLevels,
-        imageString: null,
-        playlistAuthor: null,
-        playlistDescription: null,
-      };
+      } satisfies ExtendedPlaylist;
     }
   }, [levels, playlists, selectedPlaylist]);
 

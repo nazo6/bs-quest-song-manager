@@ -8,6 +8,7 @@ export function GlobalContextMenu() {
 
   const listener = async (e: MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     showMenu({
       items: [
@@ -30,6 +31,22 @@ export function GlobalContextMenu() {
 }
 
 export function useContextMenu(
+  ref: HTMLElement | null,
+  menu: ContextMenu.Options,
+) {
+  useEffect(() => {
+    const listener = async (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showMenu(menu);
+    };
+    if (!ref) return;
+    ref.addEventListener("contextmenu", listener);
+    return () => ref!.removeEventListener("contextmenu", listener);
+  }, [ref, menu]);
+}
+
+export function useContextMenus(
   ref: RefObject<HTMLElement> | null,
   menu: ContextMenu.Options,
 ) {

@@ -18,6 +18,7 @@ export type TableOpts<S, T extends Record<string, S>> = {
   customToolbar?: React.ReactNode;
   renderDetailPanel?: MRT_TableOptions<T>["renderDetailPanel"];
   mantineTableBodyRowProps?: MRT_TableOptions<T>["mantineTableBodyRowProps"];
+  renderToolbarAlertBannerContent?: MRT_TableOptions<T>["renderToolbarAlertBannerContent"];
 };
 
 export function useCustomizedTable<S, T extends Record<string, S>>(
@@ -72,6 +73,11 @@ export function useCustomizedTable<S, T extends Record<string, S>>(
       className: "flex-grow",
     },
     mantineTableBodyRowProps: opts.mantineTableBodyRowProps,
+    mantineTableHeadProps: {
+      className: "!sticky top-0 z-10 bg-white dark:bg-black",
+    },
+    positionToolbarAlertBanner: "head-overlay",
+    renderToolbarAlertBannerContent: opts.renderToolbarAlertBannerContent,
   });
 
   return table;

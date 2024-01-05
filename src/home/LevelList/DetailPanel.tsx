@@ -1,8 +1,8 @@
 import { Table, Title } from "@mantine/core";
 import { MaybeImage } from "../../components/Image";
-import { ExtendedLevel } from "./useExtendedPlaylist";
+import { MaybeMissingLevel } from "./useExtendedPlaylist";
 
-export function DetailPanel({ row }: { row: ExtendedLevel }) {
+export function DetailPanel({ row }: { row: MaybeMissingLevel }) {
   const level = row.missing ? null : row.level;
   return (
     <div className="flex gap-2">

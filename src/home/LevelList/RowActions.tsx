@@ -4,9 +4,9 @@ import { IconDownload, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
 import { isSuccess, mutation, queryKey } from "../../typeUtils";
-import { ExtendedLevel } from "./useExtendedPlaylist";
+import { MaybeMissingLevel } from "./useExtendedPlaylist";
 
-export function RowActions({ row }: { row: ExtendedLevel }) {
+export function RowActions({ row }: { row: MaybeMissingLevel }) {
   const { queue, waiting, running } = useDownloadQueueContext();
   const queryClient = useQueryClient();
 

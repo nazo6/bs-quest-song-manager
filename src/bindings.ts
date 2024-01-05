@@ -88,7 +88,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async playlistGetAll() : Promise<__Result__<({ playlistTitle: string; playlistAuthor: string | null; playlistDescription: string | null; image: string | null; imageString: string | null; songs: Song[]; path: string })[], string>> {
+async playlistGetAll() : Promise<__Result__<{ info: PlaylistInfo; path: string }[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_get_all") };
 } catch (e) {
@@ -111,6 +111,14 @@ try {
 async playlistAddLevel(args: PlaylistAddLevelArgs) : Promise<__Result__<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_add_level", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async playlistUpdate(args: PlaylistUpdateArgs) : Promise<__Result__<null, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_update", { args }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -149,6 +157,8 @@ score: number }
 export type MapVersion = { hash: string; downloadURL: string; coverURL: string; previewURL: string }
 export type ModRoot = string
 export type PlaylistAddLevelArgs = { playlistId: number; hash: string }
+export type PlaylistInfo = { playlistTitle: string; playlistAuthor: string | null; playlistDescription: string | null; image: string | null; imageString: string | null; songs: Song[] }
+export type PlaylistUpdateArgs = { playlistId: number; newPlaylist: PlaylistInfo }
 export type ScanEvent = { Level: ScanResult } | { Playlist: ScanResult } | "Completed" | "Started"
 export type ScanResult = { Success: { path: string } } | { Failed: { reason: string; path: string } }
 export type Song = { hash: string; songName: string }

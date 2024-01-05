@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { Playlist, isSuccess, query } from "../../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
@@ -6,7 +6,6 @@ import { Chip, Title } from "@mantine/core";
 import { MaybeImage } from "../../components/Image";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
-import { useContextMenu } from "../../components/contextMenu";
 import { RowActions } from "./RowActions";
 
 export function PlaylistList(props: {
@@ -23,7 +22,10 @@ export function PlaylistList(props: {
         accessorFn: (row) => {
           return (
             <div className="flex items-center h-full">
-              <MaybeImage imageString={row.imageString} className="size-10" />
+              <MaybeImage
+                imageString={row.info.imageString}
+                className="size-10"
+              />
             </div>
           );
         },
@@ -36,14 +38,12 @@ export function PlaylistList(props: {
         header: "Title",
       },
       {
-        accessorFn: (row) => row.songs.length,
+        accessorFn: (row) => row.info.songs.length,
         header: "Songs",
       },
       {
         header: "Actions",
-        Cell: ({ row, rowRef }) => (
-          <RowActions row={row.original} rowRef={rowRef} />
-        ),
+        Cell: ({ row }) => <RowActions row={row.original} />,
       },
     ],
     [],
@@ -75,21 +75,21 @@ export function PlaylistList(props: {
     renderDetailPanel: ({ row }) => (
       <div className="flex gap-2">
         <MaybeImage
-          imageString={row.original.imageString}
+          imageString={row.original.info.imageString}
           className="size-20 lg:size-44 flex-shrink-0"
         />
         <div className="flex flex-col *:m-0">
           <Title className="border-solid border-0 border-b" order={4}>
-            {row.original.playlistTitle}
+            {row.original.info.playlistTitle}
           </Title>
           <Title order={5}>Author</Title>
-          <p>{row.original.playlistAuthor ?? "--"}</p>
+          <p>{row.original.info.playlistAuthor ?? "--"}</p>
           <Title order={5}>Description</Title>
-          <p>{row.original.playlistDescription ?? "--"}</p>
+          <p>{row.original.info.playlistDescription ?? "--"}</p>
         </div>
       </div>
     ),
-    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex }) => {
+    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex, row }) => {
       return {
         className: clsx({
           "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":
