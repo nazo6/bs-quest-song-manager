@@ -15,7 +15,7 @@ export function ChangeRootButton() {
       return "";
     }
     if (config.data.connection?.conn_type === "Adb") {
-      return "ADB";
+      return "adb mode";
     }
     if (config.data.connection?.conn_type === "Local") {
       return config.data.connection?.root || "";

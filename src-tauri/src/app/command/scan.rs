@@ -25,12 +25,21 @@ pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), Strin
     }
 
     let conn = conn.clone();
-    let (levels, playlists) =
-        tokio::spawn(async move { tokio::try_join!(load_levels(&conn), load_playlists(&conn)) })
-            .await
-            .unwrap()
-            .wrap_err("Failed to load")
-            .to_msg()?;
+
+    let (levels, playlists) = {
+        let handle = handle.clone();
+
+        tokio::spawn(async move {
+            tokio::try_join!(
+                load_levels(handle.clone(), &conn),
+                load_playlists(handle, &conn)
+            )
+        })
+        .await
+        .unwrap()
+        .wrap_err("Failed to load")
+        .to_msg()?
+    };
 
     *state.levels.write().await = levels;
     *state.playlists.write().await = playlists;

@@ -4,9 +4,11 @@ import { useScanStart } from "../../lib/useScanStart";
 import { ThemeSelector } from "./ThemeSelector";
 import { QueueViewerButton } from "./QueueViewer";
 import { ChangeRootButton } from "./ChangeRootButton";
+import { useState } from "react";
 
 export function Topbar() {
   const { scanStart } = useScanStart();
+  const [scanning, setScanning] = useState(false);
 
   return (
     <>
@@ -19,9 +21,12 @@ export function Topbar() {
           <ActionIcon
             variant="filled"
             aria-label="Settings"
-            onClick={() => {
-              scanStart();
+            onClick={async () => {
+              setScanning(true);
+              await scanStart();
+              setScanning(false);
             }}
+            disabled={scanning}
           >
             <IconRefresh style={{ width: "70%", height: "70%" }} stroke={1.5} />
           </ActionIcon>

@@ -65,13 +65,14 @@ export function useScanStart() {
           };
         }
         setScanLog((prev) => [...prev, log]);
-        notifications.update({
-          id,
-          message: `Scanned ${scanLog.length} items`,
-          autoClose: false,
-          loading: true,
-        });
       }
+
+      notifications.update({
+        id,
+        message: `Scanned ${scanLog.length} items`,
+        autoClose: false,
+        loading: true,
+      });
     });
     const data = await scanStartReq();
     if (data && isSuccess(data)) {

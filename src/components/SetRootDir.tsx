@@ -1,14 +1,16 @@
 import { Button, Code, Divider, Modal, Switch } from "@mantine/core";
 import { open } from "@tauri-apps/api/dialog";
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { mutation, queryKey } from "../typeUtils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Config, isSuccess, mutation, query, queryKey } from "../typeUtils";
 
 export function SetRootDirModal(props: {
   opened: boolean;
   onClose: () => void;
   closeable: boolean;
 }) {
+  const { data: config } = useQuery(query("configGet"));
+
   return (
     <Modal
       opened={props.opened}
@@ -20,7 +22,9 @@ export function SetRootDirModal(props: {
       closeOnEscape={props.closeable}
       closeOnClickOutside={props.closeable}
     >
-      <SetRootDirModalInner {...props} />
+      {config && isSuccess(config) && (
+        <SetRootDirModalInner {...props} config={config.data} />
+      )}
     </Modal>
   );
 }
@@ -29,9 +33,12 @@ function SetRootDirModalInner(props: {
   opened: boolean;
   onClose: () => void;
   closeable: boolean;
+  config: Config;
 }) {
-  const [rootDir, setRootDir] = useState<string | null>(null);
-  const [adb, setAdb] = useState(false);
+  const [rootDir, setRootDir] = useState<string | null>(
+    props.config.connection?.root ?? null,
+  );
+  const [adb, setAdb] = useState(props.config.connection?.conn_type === "Adb");
 
   const queryClient = useQueryClient();
 
@@ -45,14 +52,25 @@ function SetRootDirModalInner(props: {
   });
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       <div>
-        Set root directory of beatsaber mod data. This is usually{" "}
-        <Code>ModData/com.beatgames.beatsaber</Code> directory.
+        <p>Set root directory of beatsaber mod data.</p>
+        <p>
+          Alternatively, you can enable ADB mode to directly access the files on
+          Quest. In adb mode, root directory is always{" "}
+          <Code>/storage/emulated/0/ModData/com.beatgames.beatsaber</Code>.
+        </p>
       </div>
       <Switch
         checked={adb}
-        onChange={(event) => setAdb(event.currentTarget.checked)}
+        onChange={(event) => {
+          if (event.currentTarget.checked) {
+            setRootDir("/storage/emulated/0/ModData/com.beatgames.beatsaber");
+          } else {
+            setRootDir(null);
+          }
+          setAdb(event.currentTarget.checked);
+        }}
         label="Use ADB"
       />
       <div className="flex gap-2 items-center">
@@ -74,20 +92,12 @@ function SetRootDirModalInner(props: {
         className="ml-auto"
         disabled={!adb && (rootDir === null || rootDir === "")}
         onClick={async () => {
-          if (adb) {
+          if (rootDir) {
             await setConnection({
-              root: "/storage/emulated/0/ModData/com.beatgames.beatsaber",
-              conn_type: "Adb",
+              root: rootDir,
+              conn_type: adb ? "Adb" : "Local",
             });
             props.onClose();
-          } else {
-            if (rootDir) {
-              await setConnection({
-                root: rootDir,
-                conn_type: "Local",
-              });
-              props.onClose();
-            }
           }
         }}
       >

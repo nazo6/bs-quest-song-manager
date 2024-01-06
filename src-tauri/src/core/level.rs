@@ -62,7 +62,7 @@ async fn install_level(
             .await
             .unwrap()
             .wrap_err("Failed to extract zip")?;
-            crate::external::adb::push(&temp_dir, &target_path).await;
+            crate::external::adb::push(&temp_dir, &target_path).await?;
         }
     }
 

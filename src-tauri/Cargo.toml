@@ -45,6 +45,7 @@ tauri-plugin-deep-link = "0.1.2"
 tauri-plugin-context-menu = { git = "https://github.com/c2r0b/tauri-plugin-context-menu", branch = "main" }
 url = "2.5.0"
 serde_path_to_error = "0.1.15"
+path-slash = "0.2.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
