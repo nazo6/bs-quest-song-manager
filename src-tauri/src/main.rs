@@ -10,8 +10,7 @@ mod external;
 mod interface;
 mod utils;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     #[cfg(debug_assertions)]
     {
         tracing_subscriber::registry()
@@ -32,8 +31,12 @@ async fn main() {
             .init();
     }
 
-    app::build()
-        .await
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    let runtime = tokio::runtime::Builder::new_multi_thread().build().unwrap();
+
+    runtime.block_on(async {
+        app::build()
+            .await
+            .run(tauri::generate_context!())
+            .expect("error while running tauri application");
+    });
 }

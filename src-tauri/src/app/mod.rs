@@ -12,7 +12,7 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
         .commands(tauri_specta::collect_commands![
             command::config::config_get,
             command::config::config_reset,
-            command::config::config_set_mod_root,
+            command::config::config_set_connection,
             command::level::level_get_all,
             command::level::level_state_clear,
             command::level::level_add_by_hash,

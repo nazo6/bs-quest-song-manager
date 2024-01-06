@@ -2,9 +2,9 @@ use super::state::AppState;
 
 pub mod config;
 pub mod level;
+pub mod misc;
 pub mod playlist;
 pub mod scan;
-pub mod misc;
 
 pub type State<'a> = tauri::State<'a, AppState>;
 
@@ -19,18 +19,14 @@ impl<T> IntoMsg<T> for eyre::Result<T> {
 }
 
 mod macros {
-    /// Ensure that mod root is not None and if it is, return an error
-    macro_rules! ensure_mod_root {
-        ($ctx:tt) => {{
-            let config = $ctx.config.read().await;
-            config
-                .mod_root
-                .as_ref()
-                .ok_or_else(|| {
-                    "root path is not set. Please set it with `set-root` command".to_string()
-                })?
-                .clone()
+    macro_rules! ensure_conn {
+        ($config:tt) => {{
+            match $config.connection {
+                Some(ref conn) => conn,
+                None => return Err("Connection not set".to_string()),
+            }
         }};
     }
-    pub(crate) use ensure_mod_root;
+
+    pub(crate) use ensure_conn;
 }

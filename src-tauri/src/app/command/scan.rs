@@ -3,23 +3,20 @@ use eyre::Result;
 use tauri::AppHandle;
 use tauri_specta::Event;
 
+use crate::app::command::macros::ensure_conn;
 use crate::core::scan::{load_levels, load_playlists};
 use crate::interface::scan::ScanEvent;
 
-use super::macros::ensure_mod_root;
 use super::{IntoMsg, State};
 
 #[tracing::instrument(skip(state, handle), err)]
 #[tauri::command]
 #[specta::specta]
 pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), String> {
-    let root = ensure_mod_root!(state);
+    let config = state.config.read().await;
+    let conn = ensure_conn!(config);
 
-    tracing::info!("Scanning {:?}", &root.0);
-
-    let send_event = |event: ScanEvent| event.emit_all(&handle).unwrap();
-
-    send_event(ScanEvent::Started);
+    ScanEvent::Started.emit_all(&handle).unwrap();
 
     let permit = state.scan_state.scan_permit.try_acquire();
 
@@ -27,18 +24,18 @@ pub async fn scan_start(handle: AppHandle, state: State<'_>) -> Result<(), Strin
         return Err("Already scanning".to_string());
     }
 
-    let (levels, playlists) = futures::future::try_join(
-        load_levels(&root, handle.clone()),
-        load_playlists(handle.clone(), &root),
-    )
-    .await
-    .wrap_err("Failed to load")
-    .to_msg()?;
+    let conn = conn.clone();
+    let (levels, playlists) =
+        tokio::spawn(async move { tokio::try_join!(load_levels(&conn), load_playlists(&conn)) })
+            .await
+            .unwrap()
+            .wrap_err("Failed to load")
+            .to_msg()?;
 
     *state.levels.write().await = levels;
     *state.playlists.write().await = playlists;
 
-    send_event(ScanEvent::Completed);
+    ScanEvent::Completed.emit_all(&handle).unwrap();
 
     tracing::info!("Scan completed");
 

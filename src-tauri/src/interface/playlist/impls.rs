@@ -1,20 +1,23 @@
+use std::path::Path;
+
 use eyre::Result;
-use std::path::PathBuf;
+
+use crate::interface::connection::ConnectionType;
 
 use super::{Playlist, PlaylistInfo};
 
 impl Playlist {
-    pub async fn from_path(path: &PathBuf) -> Result<Self> {
-        let playlist_str = tokio::fs::read_to_string(path).await?;
+    pub async fn load(ct: ConnectionType, path: &Path) -> Result<Self> {
+        let playlist_str = ct.read_to_string(path).await?;
         let playlist: PlaylistInfo = serde_json::from_str(&playlist_str)?;
         Ok(Self {
             info: playlist,
-            path: path.clone(),
+            path: path.to_path_buf(),
         })
     }
-    pub async fn save(&self) -> Result<()> {
+    pub async fn save(&self, ct: ConnectionType) -> Result<()> {
         let playlist_str = serde_json::to_string_pretty(&self.info)?;
-        tokio::fs::write(&self.path, playlist_str).await?;
+        ct.write_file_string(&self.path, playlist_str).await?;
         Ok(())
     }
 }
@@ -27,8 +30,10 @@ mod test {
 
     #[tokio::test]
     async fn playlist_load_1() {
-        let mut level_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        level_path.push("test-data/playlist/1.json");
-        let _ = Playlist::from_path(&level_path).await.unwrap();
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("test-data")
+            .join("playlist")
+            .join("1.json");
+        let _ = Playlist::load(ConnectionType::Local, &path).await.unwrap();
     }
 }

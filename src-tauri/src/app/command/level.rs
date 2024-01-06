@@ -8,34 +8,37 @@ use crate::{
     interface::level::{Level, LevelMap},
 };
 
-use super::{macros::ensure_mod_root, IntoMsg, State};
+use super::{macros::ensure_conn, IntoMsg, State};
 
 /// Return current level state.
 #[tauri::command]
 #[specta::specta]
-pub async fn level_get_all(ctx: State<'_>) -> Result<LevelMap, String> {
-    let res = ctx.levels.read().await.clone();
+pub async fn level_get_all(state: State<'_>) -> Result<LevelMap, String> {
+    let res = state.levels.read().await.clone();
     Ok(res)
 }
 
 /// Clear level state.
 #[tauri::command]
 #[specta::specta]
-pub async fn level_state_clear(ctx: State<'_>) -> Result<(), String> {
-    *ctx.levels.write().await = HashMap::new();
+pub async fn level_state_clear(state: State<'_>) -> Result<(), String> {
+    *state.levels.write().await = HashMap::new();
     Ok(())
 }
 
 /// Search, download and add level to state and disk.
-#[tracing::instrument(skip(ctx), err)]
+#[tracing::instrument(skip(state), err)]
 #[tauri::command]
 #[specta::specta]
-pub async fn level_add_by_hash(ctx: State<'_>, hash: String) -> Result<Level, String> {
-    let root = ensure_mod_root!(ctx);
-    let level = crate::core::level::install_level_by_hash(&root, hash)
+pub async fn level_add_by_hash(state: State<'_>, hash: String) -> Result<Level, String> {
+    let config = state.config.read().await;
+    let conn = ensure_conn!(config);
+
+    let level = crate::core::level::install_level_by_hash(conn, hash)
         .await
         .to_msg()?;
-    ctx.levels
+    state
+        .levels
         .write()
         .await
         .insert(level.hash.clone(), level.clone());
@@ -43,15 +46,18 @@ pub async fn level_add_by_hash(ctx: State<'_>, hash: String) -> Result<Level, St
 }
 
 /// Search, download and add level to state and disk.
-#[tracing::instrument(skip(ctx), err)]
+#[tracing::instrument(skip(state), err)]
 #[tauri::command]
 #[specta::specta]
-pub async fn level_add_by_id(ctx: State<'_>, id: String) -> Result<Level, String> {
-    let root = ensure_mod_root!(ctx);
-    let level = crate::core::level::install_level_by_id(&root, &id)
+pub async fn level_add_by_id(state: State<'_>, id: String) -> Result<Level, String> {
+    let config = state.config.read().await;
+    let conn = ensure_conn!(config);
+
+    let level = crate::core::level::install_level_by_id(conn, &id)
         .await
         .to_msg()?;
-    ctx.levels
+    state
+        .levels
         .write()
         .await
         .insert(level.hash.clone(), level.clone());
@@ -59,11 +65,11 @@ pub async fn level_add_by_id(ctx: State<'_>, id: String) -> Result<Level, String
 }
 
 /// Delete levels from state and disk.
-#[tracing::instrument(skip(ctx), err)]
+#[tracing::instrument(skip(state), err)]
 #[tauri::command]
 #[specta::specta]
-pub async fn level_delete(ctx: State<'_>, hash: String) -> Result<(), String> {
-    let level = ctx
+pub async fn level_delete(state: State<'_>, hash: String) -> Result<(), String> {
+    let level = state
         .levels
         .write()
         .await

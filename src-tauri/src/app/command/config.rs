@@ -1,4 +1,4 @@
-use crate::interface::config::Config;
+use crate::interface::{config::Config, connection::Connection};
 
 use super::{IntoMsg, State};
 
@@ -10,8 +10,11 @@ pub async fn config_get(state: State<'_>) -> Result<Config, String> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn config_set_mod_root(state: State<'_>, mod_root: String) -> Result<(), String> {
-    state.config.write().await.mod_root = Some(mod_root.into());
+pub async fn config_set_connection(
+    state: State<'_>,
+    connection_config: Connection,
+) -> Result<(), String> {
+    state.config.write().await.connection = Some(connection_config);
     state.config.read().await.write_to_file().await.to_msg()?;
     state.levels.write().await.clear();
     state.playlists.write().await.clear();

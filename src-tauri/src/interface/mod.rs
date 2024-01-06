@@ -1,4 +1,5 @@
 pub mod config;
+pub mod connection;
 pub mod level;
 pub mod playlist;
 pub mod scan;

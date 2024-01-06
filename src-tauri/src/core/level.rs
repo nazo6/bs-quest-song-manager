@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use eyre::Context;
 use tracing::info;
@@ -7,12 +7,19 @@ use crate::{
     cache::CACHE,
     constant::TEMP_DIR,
     external::beatsaver::{self, map::MapDetail},
-    interface::{config::ModRoot, level::Level},
+    interface::{
+        connection::{Connection, ConnectionType},
+        level::Level,
+    },
     utils::sha1_hash,
 };
 
 #[tracing::instrument(err)]
-async fn install_level(download_url: &str, extract_dir: &Path) -> eyre::Result<()> {
+async fn install_level(
+    ct: ConnectionType,
+    download_url: &str,
+    target_path: PathBuf,
+) -> eyre::Result<()> {
     let url_hash = sha1_hash(download_url);
     let bytes = reqwest::get(download_url)
         .await
@@ -30,17 +37,34 @@ async fn install_level(download_url: &str, extract_dir: &Path) -> eyre::Result<(
         .await
         .wrap_err("Failed to copy file")?;
 
-    let extract_dir = extract_dir.to_owned();
-    tokio::task::spawn_blocking(move || {
-        let res = zip_extensions::zip_extract(&download_path, &extract_dir);
-        match res {
-            Ok(_) => Ok(extract_dir),
-            Err(e) => Err(e),
+    match ct {
+        ConnectionType::Local => {
+            tokio::task::spawn_blocking(move || {
+                let res = zip_extensions::zip_extract(&download_path, &target_path);
+                match res {
+                    Ok(_) => Ok(target_path),
+                    Err(e) => Err(e),
+                }
+            })
+            .await
+            .unwrap()
+            .wrap_err("Failed to extract zip")?;
         }
-    })
-    .await
-    .unwrap()
-    .wrap_err("Failed to extract zip")?;
+        ConnectionType::Adb => {
+            let temp_dir = TEMP_DIR.join(format!("bqsm-{}", url_hash));
+            let temp_dir = tokio::task::spawn_blocking(move || {
+                let res = zip_extensions::zip_extract(&download_path, &temp_dir);
+                match res {
+                    Ok(_) => Ok(temp_dir),
+                    Err(e) => Err(e),
+                }
+            })
+            .await
+            .unwrap()
+            .wrap_err("Failed to extract zip")?;
+            crate::external::adb::push(&temp_dir, &target_path).await;
+        }
+    }
 
     Ok(())
 }
@@ -57,8 +81,8 @@ pub async fn fetch_remote(hash: &str) -> eyre::Result<MapDetail> {
     Ok(res)
 }
 
-#[tracing::instrument(skip(root_dir), err)]
-pub async fn install_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
+#[tracing::instrument(skip(conn), err)]
+pub async fn install_level_by_hash(conn: &Connection, hash: String) -> eyre::Result<Level> {
     let res = fetch_remote(&hash).await?;
     let download_url = &res
         .versions
@@ -66,19 +90,18 @@ pub async fn install_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Re
         .ok_or_else(|| eyre::eyre!("No versions"))?
         .download_url;
 
-    let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
-
-    install_level(download_url, &level_dir).await?;
-    let level = Level::load(&level_dir).await?;
+    let download_dir = conn.root.level_dir().join(format!("bqsm-{}", hash));
+    install_level(conn.conn_type, download_url, download_dir.clone()).await?;
+    let level = Level::load(conn.conn_type, &download_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
 
     Ok(level)
 }
 
-#[tracing::instrument(skip(root_dir), err)]
-pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level> {
-    let res = if let Ok(hash) = CACHE.get_level_hash_by_id(id).await {
+#[tracing::instrument(skip(conn), err)]
+pub async fn install_level_by_id(conn: &Connection, id: &str) -> eyre::Result<Level> {
+    let map_detail = if let Ok(hash) = CACHE.get_level_hash_by_id(id).await {
         if let Ok(res) = CACHE.get_remote_level_by_hash(&hash).await {
             Some(res)
         } else {
@@ -87,7 +110,7 @@ pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<L
     } else {
         None
     };
-    let res = if let Some(res) = res {
+    let map_detail = if let Some(res) = map_detail {
         res
     } else {
         let res = beatsaver::map::get_map_by_id(id).await?;
@@ -99,15 +122,14 @@ pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<L
         CACHE.set_level_hash_by_id(id, &version.hash).await?;
         res
     };
-    let version = &res
+    let version = &map_detail
         .versions
         .last()
         .ok_or_else(|| eyre::eyre!("No versions"))?;
 
-    let level_dir = root_dir.level_dir().join(format!("bqsm-{}", version.hash));
-
-    install_level(&version.download_url, &level_dir).await?;
-    let level = Level::load(&level_dir).await?;
+    let download_dir = conn.root.level_dir().join(format!("bqsm-{}", version.hash));
+    install_level(conn.conn_type, &version.download_url, download_dir.clone()).await?;
+    let level = Level::load(conn.conn_type, &download_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
 

@@ -1,32 +1,31 @@
-use std::path::Path;
+use std::{path::Path};
 
 use eyre::{Context, Result};
 use futures::StreamExt;
-use tauri_specta::Event;
+
+use tracing::warn;
 
 use crate::{
     cache::CACHE,
     interface::{
-        config::ModRoot,
+        connection::{Connection, ConnectionType},
         level::{Level, LevelMap},
         playlist::Playlist,
-        scan::{ScanEvent, ScanResult},
     },
 };
 
-async fn load_level_with_cache(path: &Path) -> Result<Level> {
+async fn load_level_with_cache(ct: ConnectionType, path: &Path) -> Result<Level> {
     let dirname = path
         .file_name()
-        .ok_or_else(|| eyre::eyre!("Failed to find dirname"))?
-        .to_str()
-        .ok_or_else(|| eyre::eyre!("Failed to convert dirname to str"))?;
-
-    let level = match CACHE.get_level_by_dirname(dirname).await {
+        .ok_or_else(|| eyre::eyre!("Failed to get dirname"))?
+        .to_string_lossy()
+        .to_string();
+    let level = match CACHE.get_level_by_dirname(&dirname).await {
         Ok(level) => level,
         Err(_) => {
-            let level = Level::load(path).await?;
+            let level = Level::load(ct, path).await?;
             CACHE
-                .set_level_hash_by_dirname(dirname, &level.hash)
+                .set_level_hash_by_dirname(&dirname, &level.hash)
                 .await
                 .wrap_err("Failed to write level hash to cache")?;
             CACHE
@@ -40,41 +39,28 @@ async fn load_level_with_cache(path: &Path) -> Result<Level> {
 }
 
 #[tracing::instrument(skip_all, err)]
-pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<LevelMap> {
-    let levels_path = root.level_dir();
-    let mut level_dirs = tokio::fs::read_dir(levels_path)
-        .await
-        .wrap_err("Failed to read level dir")?;
+pub async fn load_levels(conn: &Connection) -> Result<LevelMap> {
+    let level_dirs = conn.level_dirs().await?;
 
-    let mut level_folders = Vec::new();
-    while let Ok(Some(entry)) = level_dirs.next_entry().await {
-        if let Ok(file_type) = entry.file_type().await {
-            if file_type.is_dir() {
-                level_folders.push(entry.path());
-            }
-        }
-    }
+    let ct = conn.conn_type;
 
-    let level_get_futures = level_folders.into_iter().map(|path| {
-        let handle = handle.clone();
+    let level_get_futures = level_dirs.into_iter().map(|dir_name| {
         tokio::spawn(async move {
-            let level = load_level_with_cache(&path).await;
+            let level = load_level_with_cache(ct, &dir_name).await;
             match level {
                 Ok(level) => {
-                    ScanEvent::Level(ScanResult::Success {
-                        path: path.to_string_lossy().to_string(),
-                    })
-                    .emit_all(&handle)
-                    .unwrap();
+                    // ScanEvent::Level(ScanResult::Success { path: dir_name })
+                    //     .emit_all(&handle)
+                    //     .unwrap();
                     Some((level.hash.clone(), level))
                 }
-                Err(e) => {
-                    ScanEvent::Level(ScanResult::Failed {
-                        path: path.to_string_lossy().to_string(),
-                        reason: e.to_string(),
-                    })
-                    .emit_all(&handle)
-                    .unwrap();
+                Err(_e) => {
+                    // ScanEvent::Level(ScanResult::Failed {
+                    //     path: dir_name,
+                    //     reason: e.to_string(),
+                    // })
+                    // .emit_all(&handle)
+                    // .unwrap();
                     None
                 }
             }
@@ -94,35 +80,31 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
 }
 
 #[tracing::instrument(skip_all, err)]
-pub async fn load_playlists(apphandle: tauri::AppHandle, root: &ModRoot) -> Result<Vec<Playlist>> {
-    let playlists_path = root.playlist_dir();
-    let mut playlist_files = tokio::fs::read_dir(playlists_path)
-        .await
-        .wrap_err("Failed to read playlist dir")?;
+pub async fn load_playlists(conn: &Connection) -> Result<Vec<Playlist>> {
+    let playlist_files = conn.playlist_files().await?;
+
+    dbg!(&playlist_files);
 
     let mut playlists = Vec::new();
 
-    while let Ok(Some(entry)) = playlist_files.next_entry().await {
-        if let Ok(file_type) = entry.file_type().await {
-            if file_type.is_file() {
-                match Playlist::from_path(&entry.path()).await {
-                    Ok(playlist) => {
-                        playlists.push(playlist);
-                        ScanEvent::Playlist(ScanResult::Success {
-                            path: entry.path().to_string_lossy().to_string(),
-                        })
-                        .emit_all(&apphandle)
-                        .unwrap();
-                    }
-                    Err(e) => {
-                        ScanEvent::Playlist(ScanResult::Failed {
-                            path: entry.path().to_string_lossy().to_string(),
-                            reason: e.to_string(),
-                        })
-                        .emit_all(&apphandle)
-                        .unwrap();
-                    }
-                }
+    for path in &playlist_files {
+        match Playlist::load(conn.conn_type, path).await {
+            Ok(playlist) => {
+                playlists.push(playlist);
+                // ScanEvent::Playlist(ScanResult::Success {
+                //     path: path.to_string(),
+                // })
+                // .emit_all(&apphandle)
+                // .unwrap();
+            }
+            Err(e) => {
+                warn!("Failed to load playlist {:?}: {}", path, e);
+                // ScanEvent::Playlist(ScanResult::Failed {
+                //     path: path.to_string(),
+                //     reason: e.to_string(),
+                // })
+                // .emit_all(&apphandle)
+                // .unwrap();
             }
         }
     }

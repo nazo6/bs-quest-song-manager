@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use crate::constant::CONFIG_FILE_PATH;
 
+use super::connection::Connection;
+
 #[derive(Debug, Serialize, Deserialize, specta::Type, Clone, Default)]
 pub struct ModRoot(pub PathBuf);
 
@@ -28,7 +30,7 @@ impl From<String> for ModRoot {
 pub(crate) struct Config {
     // Root of mod files for beatsaber.
     // In quest, this is /storage/emulated/0/ModData/com.beatgames.beatsaber
-    pub mod_root: Option<ModRoot>,
+    pub connection: Option<Connection>,
 }
 
 impl Config {

@@ -4,10 +4,24 @@ import { SetRootDirModal } from "../../components/SetRootDir";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { isSuccess, query } from "../../typeUtils";
+import { useMemo } from "react";
 
 export function ChangeRootButton() {
   const [opened, { close, open }] = useDisclosure(false);
   const { data: config } = useQuery(query("configGet"));
+
+  const dirStr = useMemo(() => {
+    if (!config || !isSuccess(config)) {
+      return "";
+    }
+    if (config.data.connection?.conn_type === "Adb") {
+      return "ADB";
+    }
+    if (config.data.connection?.conn_type === "Local") {
+      return config.data.connection?.root || "";
+    }
+    return "";
+  }, [config]);
 
   return (
     <>
@@ -19,7 +33,7 @@ export function ChangeRootButton() {
           className="px-2"
         >
           <IconFolder className="size-5 flex-shrink-0" />
-          <p>{config && isSuccess(config) ? config.data.mod_root : ""}</p>
+          <p>{dirStr}</p>
         </Button>
       </Tooltip>
 

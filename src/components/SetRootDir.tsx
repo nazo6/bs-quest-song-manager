@@ -1,4 +1,4 @@
-import { Button, Code, Divider, Modal } from "@mantine/core";
+import { Button, Code, Divider, Modal, Switch } from "@mantine/core";
 import { open } from "@tauri-apps/api/dialog";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,10 +31,12 @@ function SetRootDirModalInner(props: {
   closeable: boolean;
 }) {
   const [rootDir, setRootDir] = useState<string | null>(null);
+  const [adb, setAdb] = useState(false);
+
   const queryClient = useQueryClient();
 
-  const { mutateAsync: setModRoot } = useMutation({
-    ...mutation("configSetModRoot"),
+  const { mutateAsync: setConnection } = useMutation({
+    ...mutation("configSetConnection"),
     onSettled: async () => {
       queryClient.invalidateQueries(queryKey("configGet"));
       queryClient.invalidateQueries(queryKey("levelGetAll"));
@@ -48,9 +50,15 @@ function SetRootDirModalInner(props: {
         Set root directory of beatsaber mod data. This is usually{" "}
         <Code>ModData/com.beatgames.beatsaber</Code> directory.
       </div>
+      <Switch
+        checked={adb}
+        onChange={(event) => setAdb(event.currentTarget.checked)}
+        label="Use ADB"
+      />
       <div className="flex gap-2 items-center">
         <Button
           className="flex-shrink-0"
+          disabled={adb}
           onClick={async () => {
             const dir = await open({ directory: true, multiple: false });
             if (typeof dir !== "string") return;
@@ -64,11 +72,22 @@ function SetRootDirModalInner(props: {
       <Divider />
       <Button
         className="ml-auto"
-        disabled={rootDir === null || rootDir === ""}
+        disabled={!adb && (rootDir === null || rootDir === "")}
         onClick={async () => {
-          if (rootDir) {
-            await setModRoot(rootDir);
+          if (adb) {
+            await setConnection({
+              root: "/storage/emulated/0/ModData/com.beatgames.beatsaber",
+              conn_type: "Adb",
+            });
             props.onClose();
+          } else {
+            if (rootDir) {
+              await setConnection({
+                root: rootDir,
+                conn_type: "Local",
+              });
+              props.onClose();
+            }
           }
         }}
       >

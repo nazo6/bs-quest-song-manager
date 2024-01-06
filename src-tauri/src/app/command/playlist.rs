@@ -1,17 +1,17 @@
 use crate::interface::playlist::{Playlist, PlaylistInfo, Song};
 
-use super::{IntoMsg, State};
+use super::{macros::ensure_conn, IntoMsg, State};
 
 #[tauri::command]
 #[specta::specta]
-pub async fn playlist_get_all(ctx: State<'_>) -> Result<Vec<Playlist>, String> {
-    Ok(ctx.playlists.read().await.clone())
+pub async fn playlist_get_all(state: State<'_>) -> Result<Vec<Playlist>, String> {
+    Ok(state.playlists.read().await.clone())
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn playlist_state_clear(ctx: State<'_>) -> Result<(), String> {
-    *ctx.playlists.write().await = Vec::new();
+pub async fn playlist_state_clear(state: State<'_>) -> Result<(), String> {
+    *state.playlists.write().await = Vec::new();
     Ok(())
 }
 
@@ -25,8 +25,14 @@ pub struct PlaylistAddLevelArgs {
 /// Playlist id is index of playlist in `playlists` array.
 #[tauri::command]
 #[specta::specta]
-pub async fn playlist_add_level(ctx: State<'_>, args: PlaylistAddLevelArgs) -> Result<(), String> {
-    let song_name = ctx
+pub async fn playlist_add_level(
+    state: State<'_>,
+    args: PlaylistAddLevelArgs,
+) -> Result<(), String> {
+    let config = state.config.read().await;
+    let conn = ensure_conn!(config);
+
+    let song_name = state
         .levels
         .read()
         .await
@@ -35,7 +41,7 @@ pub async fn playlist_add_level(ctx: State<'_>, args: PlaylistAddLevelArgs) -> R
         .info
         .song_name
         .clone();
-    let mut playlists = ctx.playlists.write().await;
+    let mut playlists = state.playlists.write().await;
     let playlist = playlists
         .get_mut(args.playlist_id as usize)
         .ok_or("Playlist not found")?;
@@ -43,7 +49,7 @@ pub async fn playlist_add_level(ctx: State<'_>, args: PlaylistAddLevelArgs) -> R
         hash: args.hash,
         song_name,
     });
-    playlist.save().await.to_msg()?;
+    playlist.save(conn.conn_type).await.to_msg()?;
     Ok(())
 }
 
@@ -55,12 +61,15 @@ pub struct PlaylistUpdateArgs {
 }
 #[tauri::command]
 #[specta::specta]
-pub async fn playlist_update(ctx: State<'_>, args: PlaylistUpdateArgs) -> Result<(), String> {
-    let mut playlists = ctx.playlists.write().await;
+pub async fn playlist_update(state: State<'_>, args: PlaylistUpdateArgs) -> Result<(), String> {
+    let config = state.config.read().await;
+    let conn = ensure_conn!(config);
+
+    let mut playlists = state.playlists.write().await;
     let playlist = playlists
         .get_mut(args.playlist_id as usize)
         .ok_or("Playlist not found")?;
     playlist.info = args.new_playlist;
-    playlist.save().await.to_msg()?;
+    playlist.save(conn.conn_type).await.to_msg()?;
     Ok(())
 }
