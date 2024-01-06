@@ -46,6 +46,8 @@ tauri-plugin-context-menu = { git = "https://github.com/c2r0b/tauri-plugin-conte
 url = "2.5.0"
 serde_path_to_error = "0.1.15"
 path-slash = "0.2.1"
+shell-escape = "0.1.5"
+base64 = "0.21.5"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

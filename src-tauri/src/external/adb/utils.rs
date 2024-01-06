@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::Path};
+use std::path::Path;
 
 use path_slash::PathExt;
 
@@ -9,7 +9,6 @@ pub fn normalize_path(path: &Path, shell: bool) -> eyre::Result<String> {
         .to_string();
 
     if shell {
-        // When passing value to adb shell, we need to escape the path
         path = format!("'{}'", path);
     }
 

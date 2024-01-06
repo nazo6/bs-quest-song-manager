@@ -53,7 +53,7 @@ pub async fn load_levels(handle: AppHandle, conn: &Connection) -> Result<LevelMa
             let level = load_level_with_cache(ct, &path).await;
             match level {
                 Ok(level) => {
-                    // debug!("Loaded level {:?}", level.info.song_name);
+                    debug!("Loaded level {:?}", level.info.song_name);
                     ScanEvent::Level(ScanResult::Success {
                         path: format!("{:?}", path),
                     })
@@ -76,7 +76,7 @@ pub async fn load_levels(handle: AppHandle, conn: &Connection) -> Result<LevelMa
     });
 
     let levels = futures::stream::iter(level_get_futures)
-        .buffer_unordered(500)
+        .buffer_unordered(100)
         .collect::<Vec<_>>()
         .await
         .into_iter()

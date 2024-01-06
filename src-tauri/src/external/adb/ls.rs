@@ -69,7 +69,7 @@ fn parse_ls(str: String) -> eyre::Result<Vec<DirEntry>> {
 pub async fn ls(remote_path: &Path) -> eyre::Result<Vec<DirEntry>> {
     let remote_path = normalize_path(remote_path, true)?;
     let output = tokio::process::Command::new("adb")
-        .args(["shell", "ls", "-l", &remote_path])
+        .args(["shell", &format!("ls -l {}", &remote_path)])
         .output()
         .await
         .wrap_err("Failed to spawn adb")?;

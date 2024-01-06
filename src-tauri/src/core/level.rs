@@ -94,6 +94,8 @@ pub async fn install_level_by_hash(conn: &Connection, hash: String) -> eyre::Res
     install_level(conn.conn_type, download_url, download_dir.clone()).await?;
     let level = Level::load(conn.conn_type, &download_dir).await?;
 
+    dbg!(&level);
+
     info!("Added level: {}", level.info.song_name);
 
     Ok(level)
