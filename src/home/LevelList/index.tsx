@@ -1,7 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { type MRT_ColumnDef, MantineReactTable } from "mantine-react-table";
 import { useEffect, useMemo } from "react";
-import { MaybeImage } from "../../components/Image";
+import { MaybeImage, levelHashImageUrl } from "../../components/Image";
 import { useCustomizedTable } from "../../components/Table";
 import { DetailPanel } from "./DetailPanel";
 import { RowActions } from "./RowActions";
@@ -35,7 +35,11 @@ export function LevelList({
           return (
             <div className="flex items-center h-full">
               <MaybeImage
-                src={row.missing ? null : convertFileSrc(row.level.image_path)}
+                src={
+                  row.missing
+                    ? levelHashImageUrl(row.song.hash)
+                    : convertFileSrc(row.level.image_path)
+                }
                 className="size-10"
               />
             </div>

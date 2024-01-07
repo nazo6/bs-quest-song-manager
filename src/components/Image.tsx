@@ -4,6 +4,10 @@ export function base64ToImgSrc(base64: string | null) {
   return base64 ? `data:image/png;base64,${base64}` : null;
 }
 
+export function levelHashImageUrl(hash: string) {
+  return `https://cdn.beatsaver.com/${hash}.jpg`;
+}
+
 export function MaybeImage(props: {
   src?: string | null;
   alt?: string;

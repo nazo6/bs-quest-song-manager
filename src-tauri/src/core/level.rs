@@ -59,16 +59,11 @@ pub async fn fetch_remote(hash: &str) -> eyre::Result<MapDetail> {
 
 #[tracing::instrument(skip(root_dir), err)]
 pub async fn install_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Result<Level> {
-    let res = fetch_remote(&hash).await?;
-    let download_url = &res
-        .versions
-        .last()
-        .ok_or_else(|| eyre::eyre!("No versions"))?
-        .download_url;
+    let download_url = format!("https://cdn.beatsaver.com/{}.zip", hash);
 
     let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
 
-    install_level(download_url, &level_dir).await?;
+    install_level(&download_url, &level_dir).await?;
     let level = Level::load(&level_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
@@ -78,35 +73,24 @@ pub async fn install_level_by_hash(root_dir: &ModRoot, hash: String) -> eyre::Re
 
 #[tracing::instrument(skip(root_dir), err)]
 pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<Level> {
-    let res = if let Ok(hash) = CACHE.get_level_hash_by_id(id).await {
-        if let Ok(res) = CACHE.get_remote_level_by_hash(&hash).await {
-            Some(res)
-        } else {
-            None
+    let (download_url, hash) = match CACHE.get_level_hash_by_id(id).await {
+        Ok(hash) => (format!("https://cdn.beatsaver.com/{}.zip", hash), hash),
+        Err(_) => {
+            let mut res = beatsaver::map::get_map_by_id(id).await?;
+            let version = res
+                .versions
+                .pop()
+                .ok_or_else(|| eyre::eyre!("Failed to get last version of map {}", res.id))?;
+            (
+                format!("https://cdn.beatsaver.com/{}.zip", version.hash),
+                version.hash,
+            )
         }
-    } else {
-        None
     };
-    let res = if let Some(res) = res {
-        res
-    } else {
-        let res = beatsaver::map::get_map_by_id(id).await?;
-        let version = res
-            .versions
-            .last()
-            .ok_or_else(|| eyre::eyre!("No versions"))?;
-        CACHE.set_remote_level(&version.hash, &res).await?;
-        CACHE.set_level_hash_by_id(id, &version.hash).await?;
-        res
-    };
-    let version = &res
-        .versions
-        .last()
-        .ok_or_else(|| eyre::eyre!("No versions"))?;
 
-    let level_dir = root_dir.level_dir().join(format!("bqsm-{}", version.hash));
+    let level_dir = root_dir.level_dir().join(format!("bqsm-{}", hash));
 
-    install_level(&version.download_url, &level_dir).await?;
+    install_level(&download_url, &level_dir).await?;
     let level = Level::load(&level_dir).await?;
 
     info!("Added level: {}", level.info.song_name);
