@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +9,8 @@ mod impls;
 pub struct Playlist {
     pub info: PlaylistInfo,
     pub path: PathBuf,
+    /// Calculated from path
+    pub hash: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, specta::Type, Clone)]
@@ -28,4 +30,6 @@ pub struct Song {
     pub hash: String,
     pub song_name: String,
 }
+
+pub type PlaylistMap = HashMap<String, Playlist>;
 

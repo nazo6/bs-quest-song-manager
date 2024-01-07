@@ -13,7 +13,6 @@ export type TableOpts<S, T extends Record<string, S>> = {
   columns: MRT_ColumnDef<T>[];
   data: T[];
   selected?: number | null | unknown;
-  setSelected?: (index: number | null) => void;
   title: string;
   customToolbar?: React.ReactNode;
   renderDetailPanel?: MRT_TableOptions<T>["renderDetailPanel"];

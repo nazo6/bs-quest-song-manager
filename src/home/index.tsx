@@ -6,7 +6,7 @@ import { LevelList } from "./LevelList";
 import { Topbar } from "./Topbar";
 import { LinkHandler } from "../components/LinkHandler";
 
-export type SelectedPlaylist = number | null | "noPlaylist";
+export type SelectedPlaylist = string | null | "noPlaylist";
 
 export function Home() {
   return (

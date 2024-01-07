@@ -1,6 +1,5 @@
 use eyre::Result;
 use once_cell::sync::Lazy;
-use tracing::debug;
 
 use crate::{constant::CACHE_DIR, external::beatsaver::map::MapDetail, interface::level::Level};
 

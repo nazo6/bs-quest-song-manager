@@ -23,7 +23,7 @@ export function AddLevel(props: {
   };
 
   return (
-    <Popover opened={opened} withArrow>
+    <Popover opened={opened} withArrow onClose={closeDialog}>
       <Popover.Target>
         <Tooltip label="Change root folder">
           <Button

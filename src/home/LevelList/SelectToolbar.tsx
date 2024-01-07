@@ -51,7 +51,7 @@ export function SelectToolbar({
               (s) =>
                 !selected.rows.some((r) => r.original.song.hash === s.hash),
             );
-            await updatePlaylist({ playlistId, newPlaylist });
+            await updatePlaylist({ hash: playlistId, newPlaylist });
             table.resetRowSelection();
             notifications.show({
               title: "Removed",

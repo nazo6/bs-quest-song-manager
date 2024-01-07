@@ -14,7 +14,12 @@ tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
 reqwest = { version = "0.11.23", features = ["json"] }
-tauri = { version = "1.5", features = [ "protocol-asset", "dialog-all", "shell-open", "devtools"] }
+tauri = { version = "1.5", features = [
+  "protocol-asset",
+  "dialog-all",
+  "shell-open",
+  "devtools",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 specta = "=2.0.0-rc.7"
@@ -38,10 +43,20 @@ tauri-specta = { version = "=2.0.0-rc.4", features = [
   "typescript",
 ] }
 base64 = "0.21.5"
-tauri-plugin-deep-link = "0.1.2"
 tauri-plugin-context-menu = { git = "https://github.com/c2r0b/tauri-plugin-context-menu", branch = "main" }
 url = "2.5.0"
 serde_path_to_error = "0.1.15"
+sanitize-filename = "0.5.0"
+tauri-utils = "1.5.2"
+
+[target.'cfg(windows)'.dependencies]
+interprocess = { version = "1.2", default-features = false }
+windows-sys = { version = "0.52.0", features = [
+  "Win32_Foundation",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_WindowsAndMessaging",
+] }
+winreg = "0.52.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

@@ -9,7 +9,7 @@ use crate::{
     interface::{
         config::ModRoot,
         level::{Level, LevelMap},
-        playlist::Playlist,
+        playlist::{Playlist, PlaylistMap},
         scan::{ScanEvent, ScanResult},
     },
 };
@@ -94,38 +94,55 @@ pub async fn load_levels(root: &ModRoot, handle: tauri::AppHandle) -> Result<Lev
 }
 
 #[tracing::instrument(skip_all, err)]
-pub async fn load_playlists(apphandle: tauri::AppHandle, root: &ModRoot) -> Result<Vec<Playlist>> {
+pub async fn load_playlists(handle: tauri::AppHandle, root: &ModRoot) -> Result<PlaylistMap> {
     let playlists_path = root.playlist_dir();
     let mut playlist_files = tokio::fs::read_dir(playlists_path)
         .await
         .wrap_err("Failed to read playlist dir")?;
 
-    let mut playlists = Vec::new();
-
+    let mut playlist_folders = Vec::new();
     while let Ok(Some(entry)) = playlist_files.next_entry().await {
         if let Ok(file_type) = entry.file_type().await {
             if file_type.is_file() {
-                match Playlist::from_path(&entry.path()).await {
-                    Ok(playlist) => {
-                        playlists.push(playlist);
-                        ScanEvent::Playlist(ScanResult::Success {
-                            path: entry.path().to_string_lossy().to_string(),
-                        })
-                        .emit_all(&apphandle)
-                        .unwrap();
-                    }
-                    Err(e) => {
-                        ScanEvent::Playlist(ScanResult::Failed {
-                            path: entry.path().to_string_lossy().to_string(),
-                            reason: e.to_string(),
-                        })
-                        .emit_all(&apphandle)
-                        .unwrap();
-                    }
-                }
+                playlist_folders.push(entry.path());
             }
         }
     }
+
+    let playlist_get_futures = playlist_folders.into_iter().map(|path| {
+        let handle = handle.clone();
+        tokio::spawn(async move {
+            let playlist = Playlist::from_path(&path).await;
+            match playlist {
+                Ok(playlist) => {
+                    ScanEvent::Playlist(ScanResult::Success {
+                        path: path.to_string_lossy().to_string(),
+                    })
+                    .emit_all(&handle)
+                    .unwrap();
+                    Some((playlist.hash.clone(), playlist))
+                }
+                Err(e) => {
+                    ScanEvent::Playlist(ScanResult::Failed {
+                        path: path.to_string_lossy().to_string(),
+                        reason: e.to_string(),
+                    })
+                    .emit_all(&handle)
+                    .unwrap();
+                    None
+                }
+            }
+        })
+    });
+
+    let playlists = futures::stream::iter(playlist_get_futures)
+        .buffer_unordered(10)
+        .collect::<Vec<_>>()
+        .await
+        .into_iter()
+        .flatten()
+        .flatten()
+        .collect::<PlaylistMap>();
 
     Ok(playlists)
 }

@@ -2,19 +2,25 @@ import { useMemo } from "react";
 import { Playlist, isSuccess, query } from "../../typeUtils";
 import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
 import { useCustomizedTable } from "../../components/Table";
-import { Chip, Title } from "@mantine/core";
+import { Title } from "@mantine/core";
 import { MaybeImage, base64ToImgSrc } from "../../components/Image";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { RowActions } from "./RowActions";
+import { Toolbar } from "./Toolbar";
+import { SelectedPlaylist } from "..";
 
 export function PlaylistList(props: {
-  selectedPlaylist: number | null | "noPlaylist";
-  setSelectedPlaylist: (index: number | null | "noPlaylist") => void;
+  selectedPlaylist: SelectedPlaylist;
+  setSelectedPlaylist: (v: SelectedPlaylist) => void;
 }) {
   const { data: playlistsRes } = useQuery(query("playlistGetAll"));
   const playlists =
-    playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : [];
+    playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : {};
+
+  const playlistsArray = useMemo(() => {
+    return Object.values(playlists);
+  }, [playlists]);
 
   const columns = useMemo<MRT_ColumnDef<Playlist>[]>(
     () => [
@@ -51,27 +57,9 @@ export function PlaylistList(props: {
 
   const table = useCustomizedTable({
     columns,
-    data: playlists,
+    data: playlistsArray,
     selected: props.selectedPlaylist,
-    setSelected: props.setSelectedPlaylist,
     title: "Playlists",
-    customToolbar: (
-      <div className="flex">
-        <Chip
-          checked={props.selectedPlaylist === "noPlaylist"}
-          size="xs"
-          onClick={() => {
-            if (props.selectedPlaylist === "noPlaylist") {
-              props.setSelectedPlaylist(null);
-            } else {
-              props.setSelectedPlaylist("noPlaylist");
-            }
-          }}
-        >
-          Level not in any playlist
-        </Chip>
-      </div>
-    ),
     renderDetailPanel: ({ row }) => (
       <div className="flex gap-2">
         <MaybeImage
@@ -89,19 +77,25 @@ export function PlaylistList(props: {
         </div>
       </div>
     ),
-    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex }) => {
+    customToolbar: (
+      <Toolbar
+        selectedPlaylist={props.selectedPlaylist}
+        setSelectedPlaylist={props.setSelectedPlaylist}
+      />
+    ),
+    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex, row }) => {
       return {
         className: clsx({
           "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":
-            !isDetailPanel && staticRowIndex === props.selectedPlaylist,
+            !isDetailPanel && row.original.hash === props.selectedPlaylist,
           "h-14 cursor-pointer": !isDetailPanel,
         }),
         onClick: () => {
           if (!isDetailPanel) {
-            if (staticRowIndex === props.selectedPlaylist) {
+            if (row.original.hash === props.selectedPlaylist) {
               props.setSelectedPlaylist(null);
             } else {
-              props.setSelectedPlaylist(staticRowIndex);
+              props.setSelectedPlaylist(row.original.hash);
             }
           }
         },

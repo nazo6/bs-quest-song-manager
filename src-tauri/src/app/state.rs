@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use eyre::Result;
 use tokio::sync::{RwLock, Semaphore};
 
-use crate::interface::{config::Config, level::LevelMap, playlist::Playlist};
+use crate::interface::{config::Config, level::LevelMap, playlist::PlaylistMap};
 
 /// Application state
 ///
@@ -16,7 +16,7 @@ use crate::interface::{config::Config, level::LevelMap, playlist::Playlist};
 /// Scan should not take long time because there are cache, so this is enough.
 pub(crate) struct AppState {
     pub config: RwLock<Config>,
-    pub playlists: RwLock<Vec<Playlist>>,
+    pub playlists: RwLock<PlaylistMap>,
     pub levels: RwLock<LevelMap>,
     pub scan_state: ScanState,
 }
@@ -31,7 +31,7 @@ impl AppState {
 
         Ok(Self {
             config: RwLock::new(config),
-            playlists: RwLock::new(Vec::new()),
+            playlists: RwLock::new(HashMap::new()),
             levels: RwLock::new(HashMap::new()),
             scan_state: ScanState {
                 scan_permit: Semaphore::new(1),

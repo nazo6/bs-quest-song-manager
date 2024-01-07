@@ -1,4 +1,3 @@
-use base64::Engine;
 use eyre::{Context, Result};
 use std::path::Path;
 

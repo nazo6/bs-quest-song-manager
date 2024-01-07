@@ -100,7 +100,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async playlistGetAll() : Promise<__Result__<{ info: PlaylistInfo; path: string }[], string>> {
+async playlistGetAll() : Promise<__Result__<{ [key in string]: { info: PlaylistInfo; path: string; hash: string } }, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_get_all") };
 } catch (e) {
@@ -128,9 +128,33 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
+async playlistAdd(args: PlaylistAddArgs) : Promise<__Result__<null, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_add", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async playlistAddFromUrl(url: string) : Promise<__Result__<null, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_add_from_url", { url }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async playlistUpdate(args: PlaylistUpdateArgs) : Promise<__Result__<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_update", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async playlistDelete(playlistHash: string) : Promise<__Result__<null, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("plugin:tauri-specta|playlist_delete", { playlistHash }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -158,7 +182,7 @@ deepLinkEvent: "plugin:tauri-specta:deep-link-event"
 
 export type BeatMap = { _difficulty: string; _difficultyRank: number; _beatmapFilename: string }
 export type BeatMapSet = { _difficultyBeatmaps: BeatMap[] }
-export type DeepLinkEvent = { id: string }
+export type DeepLinkEvent = { Level: { id: string } } | { Playlist: { url: string } }
 export type LevelInfo = { _songName: string; _songSubName: string; _songAuthorName: string; _difficultyBeatmapSets: BeatMapSet[]; _coverImageFilename: string }
 export type MapStats = { plays: number; downloads: number; upvotes: number; downvotes: number; 
 /**
@@ -167,9 +191,10 @@ export type MapStats = { plays: number; downloads: number; upvotes: number; down
 score: number }
 export type MapVersion = { hash: string; downloadURL: string; coverURL: string; previewURL: string }
 export type ModRoot = string
-export type PlaylistAddLevelArgs = { playlistId: number; hash: string }
+export type PlaylistAddArgs = { fileName: string; playlist: PlaylistInfo }
+export type PlaylistAddLevelArgs = { playlistHash: string; levelHash: string }
 export type PlaylistInfo = { playlistTitle: string; playlistAuthor: string | null; playlistDescription: string | null; image: string | null; imageString: string | null; songs: Song[] }
-export type PlaylistUpdateArgs = { playlistId: number; newPlaylist: PlaylistInfo }
+export type PlaylistUpdateArgs = { hash: string; newPlaylist: PlaylistInfo }
 export type ScanEvent = { Level: ScanResult } | { Playlist: ScanResult } | "Completed" | "Started"
 export type ScanResult = { Success: { path: string } } | { Failed: { reason: string; path: string } }
 export type Song = { hash: string; songName: string }

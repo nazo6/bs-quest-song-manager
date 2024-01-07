@@ -4,6 +4,7 @@ pub mod playlist;
 pub mod scan;
 
 #[derive(Clone, specta::Type, tauri_specta::Event, serde::Serialize)]
-pub struct DeepLinkEvent {
-    pub id: String,
+pub enum DeepLinkEvent {
+    Level { id: String },
+    Playlist { url: String },
 }

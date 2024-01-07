@@ -1,10 +1,9 @@
-use tauri::{plugin::TauriPlugin, Manager, Wry};
-use tauri_specta::Event;
-use tracing::warn;
+use tauri::{plugin::TauriPlugin, Wry};
 
 use crate::interface::{scan::ScanEvent, DeepLinkEvent};
 
 mod command;
+mod deeplink;
 mod state;
 
 pub fn specta_plugin() -> TauriPlugin<Wry> {
@@ -23,7 +22,10 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
             command::playlist::playlist_get_all,
             command::playlist::playlist_state_clear,
             command::playlist::playlist_add_level,
+            command::playlist::playlist_add,
+            command::playlist::playlist_add_from_url,
             command::playlist::playlist_update,
+            command::playlist::playlist_delete,
             command::scan::scan_start,
         ])
         .events(tauri_specta::collect_events![ScanEvent, DeepLinkEvent]);
@@ -35,8 +37,6 @@ pub fn specta_plugin() -> TauriPlugin<Wry> {
 }
 
 pub async fn build() -> tauri::Builder<Wry> {
-    tauri_plugin_deep_link::prepare("dev.nazo6.bqsm");
-
     tauri::Builder::default()
         .manage(
             state::AppState::load()
@@ -46,32 +46,7 @@ pub async fn build() -> tauri::Builder<Wry> {
         .plugin(specta_plugin())
         .plugin(tauri_plugin_context_menu::init())
         .setup(|app| {
-            fn get_id(url: &str) -> Result<String, String> {
-                let url = url::Url::parse(url).map_err(|e| format!("{:#}", e))?;
-                let id = url.host_str().ok_or("No id specified")?;
-                Ok(id.to_string())
-            }
-
-            let handle = app.handle();
-            tauri_plugin_deep_link::register("beatsaver", move |request| {
-                let Ok(id) = get_id(&request) else {
-                    warn!("Invalid url: {}", request);
-                    return;
-                };
-                DeepLinkEvent { id }.emit_all(&handle).unwrap();
-            })
-            .unwrap();
-
-            let window = app.get_window("main").unwrap();
-            #[cfg(not(target_os = "macos"))]
-            if let Some(url) = std::env::args().nth(1) {
-                if let Ok(id) = get_id(&url) {
-                    let _ = window.eval(&format!("window.initialDeepLinkId='{}'", id));
-                } else {
-                    warn!("Invalid url: {}", url);
-                }
-            }
-
+            deeplink::setup_deeplink(app);
             Ok(())
         })
 }

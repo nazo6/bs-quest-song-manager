@@ -1,24 +1,36 @@
 import { useEffect, useState } from "react";
 import { events } from "../bindings";
-import { Button, Dialog, Overlay } from "@mantine/core";
+import { Button, Dialog, Overlay, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useDownloadQueueContext } from "./DownloadQueueContext";
+import { useAddPlaylistFromUrl } from "../lib/useAddPlaylist";
 
 export function LinkHandler() {
-  const [toDownload, setToDownload] = useState<string[]>([]);
+  const [levels, setLevels] = useState<string[]>([]);
+  const [playlists, setPlaylists] = useState<string[]>([]);
   const [opened, { close, open }] = useDisclosure(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies:
   useEffect(() => {
-    if ("initialDeepLinkId" in window) {
-      const id = window.initialDeepLinkId as string;
-      setToDownload([id]);
+    if ("initialDeepLinkLevel" in window) {
+      const id = window.initialDeepLinkLevel as string;
+      setLevels([id]);
+      open();
+    }
+    if ("initialDeepLinkPlaylist" in window) {
+      const url = window.initialDeepLinkPlaylist as string;
+      setPlaylists([url]);
       open();
     }
     const listener = (async () => {
       return await events.deepLinkEvent.listen((e) => {
-        const id = e.payload.id;
-        setToDownload((prev) => [...prev, id]);
+        if ("Level" in e.payload) {
+          const id = e.payload.Level.id;
+          setLevels((prev) => [...prev, id]);
+        } else {
+          const url = e.payload.Playlist.url;
+          setPlaylists((prev) => [...prev, url]);
+        }
         open();
       });
     })();
@@ -35,8 +47,10 @@ export function LinkHandler() {
       opened={opened}
       onClose={close}
       closeable={true}
-      toDownload={toDownload}
-      setToDownload={setToDownload}
+      levels={levels}
+      setLevels={setLevels}
+      playlists={playlists}
+      setPlaylists={setPlaylists}
     />
   );
 }
@@ -45,10 +59,13 @@ export function LinkHandlerModal(props: {
   opened: boolean;
   onClose: () => void;
   closeable: boolean;
-  toDownload: string[];
-  setToDownload: React.Dispatch<React.SetStateAction<string[]>>;
+  levels: string[];
+  setLevels: React.Dispatch<React.SetStateAction<string[]>>;
+  playlists: string[];
+  setPlaylists: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
   const { queue } = useDownloadQueueContext();
+  const addPlaylistFromUrl = useAddPlaylistFromUrl();
 
   return (
     <>
@@ -57,12 +74,13 @@ export function LinkHandlerModal(props: {
         onClose={props.onClose}
         title="Download level"
         size="xl"
-        className="top-20 fixed left-0 right-0 mx-auto"
+        className="top-20 fixed left-0 right-0 mx-auto w-3/4"
       >
         <div className="flex flex-col gap-3">
           <div>Download items</div>
           <div className="flex flex-col gap-2">
-            {props.toDownload.map((id) => (
+            <Title order={5}>Levles</Title>
+            {props.levels.map((id) => (
               <div className="flex gap-2 items-center" key={id}>
                 <div>{id}</div>
                 <Button
@@ -71,10 +89,27 @@ export function LinkHandlerModal(props: {
                       type: "id",
                       id,
                     });
-                    props.setToDownload((prev) => prev.filter((i) => i !== id));
+                    props.setLevels((prev) => prev.filter((i) => i !== id));
                   }}
                 >
                   Download
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Title order={5}>Playlists</Title>
+            {props.playlists.map((url, i) => (
+              <div className="flex gap-2 items-center" key={url}>
+                <div className="break-all">{url}</div>
+                <Button
+                  className="flex-shrink-0"
+                  onClick={async () => {
+                    props.setPlaylists((prev) => prev.filter((i) => i !== url));
+                    addPlaylistFromUrl(url);
+                  }}
+                >
+                  Add
                 </Button>
               </div>
             ))}

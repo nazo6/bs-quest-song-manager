@@ -32,6 +32,9 @@ async fn main() {
             .init();
     }
 
+    #[cfg(target_os = "windows")]
+    external::deeplink::prepare("dev.nazo6.bqsm");
+
     app::build()
         .await
         .run(tauri::generate_context!())
