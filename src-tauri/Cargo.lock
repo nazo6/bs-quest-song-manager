@@ -242,6 +242,7 @@ dependencies = [
  "interprocess",
  "once_cell",
  "opendal",
+ "percent-encoding",
  "reqwest",
  "sanitize-filename",
  "serde",

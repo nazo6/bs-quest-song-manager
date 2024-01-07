@@ -1,5 +1,5 @@
 import { Badge, Button, Title } from "@mantine/core";
-import { MaybeImage } from "../../components/Image";
+import { MaybeImage, levelHashImageUrl } from "../../components/Image";
 import { MaybeMissingLevel } from "./useExtendedPlaylist";
 import { useQuery } from "@tanstack/react-query";
 import { commands } from "../../bindings";
@@ -20,12 +20,14 @@ export function DetailPanel({
 
   let imageUrl: string | null = null;
   if (level?.image_path) {
-    imageUrl = convertFileSrc(level.image_path);
+    imageUrl = convertFileSrc(level.image_path, "asset2");
   } else if (remoteInfo && isSuccess(remoteInfo)) {
     const latestVersion =
       remoteInfo.data.versions[remoteInfo.data.versions.length - 1];
     imageUrl = latestVersion?.coverURL ?? null;
   }
+
+  // const imageUrl = levelHashImageUrl(row.song.hash);
 
   return (
     <div className="flex gap-2">

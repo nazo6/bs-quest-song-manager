@@ -28,7 +28,6 @@ pub struct ScanState {
 impl AppState {
     pub async fn load() -> Result<Self> {
         let config = Config::read_from_file().await.unwrap_or_default();
-
         Ok(Self {
             config: RwLock::new(config),
             playlists: RwLock::new(HashMap::new()),
