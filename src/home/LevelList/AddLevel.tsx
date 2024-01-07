@@ -4,10 +4,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
 import { useState } from "react";
 import { ExtendedPlaylist } from "./useExtendedPlaylist";
-import { SelectedPlaylist } from "..";
+import { SelectedPlaylist } from "../selectedPlaylist";
 
 export function AddLevel(props: {
-  playlistId: SelectedPlaylist;
+  selectedPlaylist: SelectedPlaylist;
   playlist: ExtendedPlaylist;
 }) {
   const [opened, { close: closeDialog, toggle }] = useDisclosure(false);
@@ -43,7 +43,7 @@ export function AddLevel(props: {
             placeholder="song id"
             onInput={(e) => setSongId(e.currentTarget.value)}
           />
-          {props.playlistId && (
+          {typeof props.selectedPlaylist === "string" && (
             <Checkbox
               checked={downloadToPlaylist}
               onChange={(e) => setDownloadToPlaylist(e.currentTarget.checked)}
@@ -61,9 +61,9 @@ export function AddLevel(props: {
               queue.enqueue({
                 type: "id",
                 id: songId,
-                playlistId:
-                  typeof props.playlistId === "number"
-                    ? props.playlistId
+                playlistHash:
+                  typeof props.selectedPlaylist === "string"
+                    ? props.selectedPlaylist
                     : undefined,
               });
               close();

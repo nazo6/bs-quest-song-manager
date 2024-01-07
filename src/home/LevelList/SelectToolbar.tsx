@@ -4,16 +4,16 @@ import { MRT_SelectCheckbox, MRT_TableInstance } from "mantine-react-table";
 import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { mutation, queryKey } from "../../typeUtils";
-import { SelectedPlaylist } from "..";
 import { notifications } from "@mantine/notifications";
+import { SelectedPlaylist } from "../selectedPlaylist";
 
 export function SelectToolbar({
   table,
-  playlistId,
+  selectedPlaylist: playlistId,
   playlist,
 }: {
   table: MRT_TableInstance<MaybeMissingLevel>;
-  playlistId: SelectedPlaylist;
+  selectedPlaylist: SelectedPlaylist;
   playlist: ExtendedPlaylist;
 }) {
   const selected = table.getSelectedRowModel();
@@ -41,7 +41,7 @@ export function SelectToolbar({
       <div>
         {selected.rows.length} of {all.length}
       </div>
-      {typeof playlistId === "number" ? (
+      {typeof playlistId === "string" ? (
         <Button
           size="xs"
           className="flex gap-2 px-2"

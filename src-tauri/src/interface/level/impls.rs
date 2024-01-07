@@ -1,5 +1,5 @@
 use eyre::{Context, Result};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::{interface::level::LevelInfo, utils::sha1_hash};
 
@@ -49,6 +49,15 @@ impl Level {
             image_path,
             path: level_dir.to_owned(),
         })
+    }
+    pub fn with_path(info: LevelInfo, hash: String, path: PathBuf) -> Self {
+        let image_path = path.join(&info.cover_image_filename);
+        Self {
+            hash,
+            info,
+            path,
+            image_path,
+        }
     }
 }
 

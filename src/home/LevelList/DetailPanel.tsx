@@ -1,4 +1,4 @@
-import { Table, Title } from "@mantine/core";
+import { Badge, Button, Title } from "@mantine/core";
 import { MaybeImage } from "../../components/Image";
 import { MaybeMissingLevel } from "./useExtendedPlaylist";
 import { useQuery } from "@tanstack/react-query";
@@ -30,55 +30,66 @@ export function DetailPanel({
   return (
     <div className="flex gap-2">
       <MaybeImage src={imageUrl} className="size-20 lg:size-44 flex-shrink-0" />
-      <Table>
-        <Table.Tbody>
-          <Table.Tr>
-            <Table.Td>Title</Table.Td>
-            <Table.Td>
-              <Title order={4}>
-                {level ? level.info._songName : row.song.songName}
-              </Title>
-            </Table.Td>
-          </Table.Tr>
-          {level ? (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <Title order={4}>
+            {level ? level.info._songName : row.song.songName}
+          </Title>
+          {!level && <Badge color="red">Missing</Badge>}
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {level && (
             <>
-              <Table.Tr>
-                <Table.Td>Author</Table.Td>
-                <Table.Td>{level.info._songAuthorName}</Table.Td>
-              </Table.Tr>
-              <Table.Tr>
-                <Table.Td>Subname</Table.Td>
-                <Table.Td>{level.info._songSubName}</Table.Td>
-              </Table.Tr>
-            </>
-          ) : (
-            <>
-              <Table.Tr>
-                <Table.Td>Missing</Table.Td>
-                <Table.Td className="text-red-500">Missing</Table.Td>
-              </Table.Tr>
+              <div className="col-span-1">Sub name</div>
+              <div className="col-span-4 break-all">
+                {level.info._songSubName}
+              </div>
+              <div className="col-span-1">Author</div>
+              <div className="col-span-4 break-all">
+                {level.info._songAuthorName}
+              </div>
+              <div className="col-span-1">Path</div>
+              <div className="col-span-4 break-all">{level.path}</div>
             </>
           )}
-          <Table.Tr>
-            <Table.Td>hash</Table.Td>
-            <Table.Td>{row.song.hash}</Table.Td>
-          </Table.Tr>
           {isLoading ? (
-            <Table.Tr>
-              <Table.Td>loading beatsaver data...</Table.Td>
-            </Table.Tr>
+            <div className="col-span-5 text-center">Loading beatsaver...</div>
           ) : remoteInfo && isSuccess(remoteInfo) ? (
-            <Table.Tr>
-              <Table.Td>beatsaver id</Table.Td>
-              <Table.Td>{remoteInfo.data.id}</Table.Td>
-            </Table.Tr>
+            <>
+              <div className="col-span-1">Beatsaver id</div>
+              <div className="col-span-4 break-all flex gap-2 items-center">
+                {remoteInfo.data.id}
+                <Button
+                  component="a"
+                  variant="outline"
+                  href={`https://beatsaver.com/maps/${remoteInfo.data.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2"
+                  size="compact-xs"
+                >
+                  Open in beatsaver
+                </Button>
+                <Button
+                  component="a"
+                  variant="outline"
+                  href={`https://bsaber.com/songs/${remoteInfo.data.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2"
+                  size="compact-xs"
+                >
+                  Open in beastsaber
+                </Button>
+              </div>
+            </>
           ) : (
-            <Table.Tr>
-              <Table.Td>Failed to load beatsaver data</Table.Td>
-            </Table.Tr>
+            <div className="col-span-5 text-center">
+              Loading beatsaver failed: {remoteInfo?.error ?? "Unknown error"}
+            </div>
           )}
-        </Table.Tbody>
-      </Table>
+        </div>
+      </div>
     </div>
   );
 }

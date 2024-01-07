@@ -8,7 +8,8 @@ import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { RowActions } from "./RowActions";
 import { Toolbar } from "./Toolbar";
-import { SelectedPlaylist } from "..";
+import { SelectToolbar } from "./SelectToolbar";
+import { SelectedPlaylist, SpecialPlaylist } from "../selectedPlaylist";
 
 export function PlaylistList(props: {
   selectedPlaylist: SelectedPlaylist;
@@ -83,7 +84,7 @@ export function PlaylistList(props: {
         setSelectedPlaylist={props.setSelectedPlaylist}
       />
     ),
-    mantineTableBodyRowProps: ({ isDetailPanel, staticRowIndex, row }) => {
+    mantineTableBodyRowProps: ({ isDetailPanel, row }) => {
       return {
         className: clsx({
           "*:!bg-blue-500/20 *:mix-blend-multiply *:dark:mix-blend-screen":
@@ -93,7 +94,7 @@ export function PlaylistList(props: {
         onClick: () => {
           if (!isDetailPanel) {
             if (row.original.hash === props.selectedPlaylist) {
-              props.setSelectedPlaylist(null);
+              props.setSelectedPlaylist(SpecialPlaylist.All);
             } else {
               props.setSelectedPlaylist(row.original.hash);
             }
@@ -101,6 +102,9 @@ export function PlaylistList(props: {
         },
       };
     },
+    renderToolbarAlertBannerContent: ({ table }) => (
+      <SelectToolbar table={table} />
+    ),
   });
 
   return (

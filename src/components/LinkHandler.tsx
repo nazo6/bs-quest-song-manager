@@ -26,9 +26,11 @@ export function LinkHandler() {
       return await events.deepLinkEvent.listen((e) => {
         if ("Level" in e.payload) {
           const id = e.payload.Level.id;
+          if (levels.includes(id)) return;
           setLevels((prev) => [...prev, id]);
         } else {
           const url = e.payload.Playlist.url;
+          if (playlists.includes(url)) return;
           setPlaylists((prev) => [...prev, url]);
         }
         open();
@@ -99,7 +101,7 @@ export function LinkHandlerModal(props: {
           </div>
           <div className="flex flex-col gap-2">
             <Title order={5}>Playlists</Title>
-            {props.playlists.map((url, i) => (
+            {props.playlists.map((url) => (
               <div className="flex gap-2 items-center" key={url}>
                 <div className="break-all">{url}</div>
                 <Button

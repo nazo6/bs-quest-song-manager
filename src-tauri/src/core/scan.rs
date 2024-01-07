@@ -3,6 +3,7 @@ use std::path::Path;
 use eyre::{Context, Result};
 use futures::StreamExt;
 use tauri_specta::Event;
+// use tracing::debug;
 
 use crate::{
     cache::CACHE,
@@ -15,14 +16,20 @@ use crate::{
 };
 
 async fn load_level_with_cache(path: &Path) -> Result<Level> {
+    // let time = std::time::Instant::now();
     let dirname = path
         .file_name()
         .ok_or_else(|| eyre::eyre!("Failed to find dirname"))?
         .to_str()
         .ok_or_else(|| eyre::eyre!("Failed to convert dirname to str"))?;
 
-    let level = match CACHE.get_level_by_dirname(dirname).await {
-        Ok(level) => level,
+    let cache = CACHE.get_level_by_dirname(dirname).await;
+
+    let level = match cache {
+        Ok((level, hash)) => {
+            // debug!("Loaded level from cache with time {:?}", time.elapsed());
+            Level::with_path(level, hash, path.to_path_buf())
+        }
         Err(_) => {
             let level = Level::load(path).await?;
             CACHE
@@ -30,9 +37,10 @@ async fn load_level_with_cache(path: &Path) -> Result<Level> {
                 .await
                 .wrap_err("Failed to write level hash to cache")?;
             CACHE
-                .set_level(&level)
+                .set_level(&level.hash, &level.info)
                 .await
                 .wrap_err("Failed to write level to cache")?;
+            // debug!("Loaded level from disk with time {:?}", time.elapsed());
             level
         }
     };

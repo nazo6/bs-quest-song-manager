@@ -5,8 +5,7 @@ import { useState } from "react";
 import { LevelList } from "./LevelList";
 import { Topbar } from "./Topbar";
 import { LinkHandler } from "../components/LinkHandler";
-
-export type SelectedPlaylist = string | null | "noPlaylist";
+import { SelectedPlaylist, SpecialPlaylist } from "./selectedPlaylist";
 
 export function Home() {
   return (
@@ -18,8 +17,9 @@ export function Home() {
 }
 
 function Main() {
-  const [selectedPlaylist, setSelectedPlaylist] =
-    useState<SelectedPlaylist>(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<SelectedPlaylist>(
+    SpecialPlaylist.All,
+  );
 
   return (
     <div className="flex-grow relative min-h-0">

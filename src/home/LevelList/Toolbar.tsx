@@ -2,7 +2,7 @@ import { Button } from "@mantine/core";
 import { MaybeMissingLevel, ExtendedPlaylist } from "./useExtendedPlaylist";
 import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
 import { AddLevel } from "./AddLevel";
-import { SelectedPlaylist } from "..";
+import { SelectedPlaylist } from "../selectedPlaylist";
 
 export function Toolbar(props: {
   missingLevels: MaybeMissingLevel[];
@@ -31,11 +31,7 @@ export function Toolbar(props: {
       </Button>
       <AddLevel
         playlist={props.playlist}
-        playlistId={
-          typeof props.selectedPlaylist === "number"
-            ? props.selectedPlaylist
-            : null
-        }
+        selectedPlaylist={props.selectedPlaylist}
       />
     </div>
   );

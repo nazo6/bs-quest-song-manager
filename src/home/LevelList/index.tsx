@@ -1,14 +1,14 @@
-import { useEffect, useMemo } from "react";
-import { MantineReactTable, type MRT_ColumnDef } from "mantine-react-table";
-import { useCustomizedTable } from "../../components/Table";
-import { MaybeImage } from "../../components/Image";
-import { RowActions } from "./RowActions";
-import { MaybeMissingLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
-import { DetailPanel } from "./DetailPanel";
-import { Toolbar } from "./Toolbar";
-import { SelectToolbar } from "./SelectToolbar";
-import { SelectedPlaylist } from "..";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { type MRT_ColumnDef, MantineReactTable } from "mantine-react-table";
+import { useEffect, useMemo } from "react";
+import { MaybeImage } from "../../components/Image";
+import { useCustomizedTable } from "../../components/Table";
+import { DetailPanel } from "./DetailPanel";
+import { RowActions } from "./RowActions";
+import { SelectToolbar } from "./SelectToolbar";
+import { Toolbar } from "./Toolbar";
+import { MaybeMissingLevel, useExtendedPlaylist } from "./useExtendedPlaylist";
+import { SelectedPlaylist } from "../selectedPlaylist";
 
 export function LevelList({
   selectedPlaylist,
@@ -85,7 +85,7 @@ export function LevelList({
       <SelectToolbar
         table={table}
         playlist={playlist}
-        playlistId={selectedPlaylist}
+        selectedPlaylist={selectedPlaylist}
       />
     ),
   });

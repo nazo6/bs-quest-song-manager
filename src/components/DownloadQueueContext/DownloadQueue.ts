@@ -6,7 +6,7 @@ export type DownloadResult = { status: "ok" } | { status: "error" };
 export type DownloadJob = () => Promise<DownloadResult>;
 export type DownloadQueueItem = {
   queueId: number;
-  playlistId?: number;
+  playlistHash?: string;
 } & (
   | {
       type: "hash";
@@ -18,7 +18,7 @@ export type DownloadQueueItem = {
     }
 );
 export type DownloadQueueItemParam = {
-  playlistId?: number;
+  playlistHash?: string;
 } & (
   | {
       type: "hash";
@@ -145,10 +145,10 @@ export function useDownloadQueue() {
         }
         level = res.data;
       }
-      if (queueItem.playlistId) {
+      if (queueItem.playlistHash) {
         await addLevelToPlaylist({
-          playlistId: queueItem.playlistId,
-          hash: level.hash,
+          playlistHash: queueItem.playlistHash,
+          levelHash: level.hash,
         });
       }
       return { status: "ok" };

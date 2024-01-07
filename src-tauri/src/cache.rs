@@ -1,7 +1,9 @@
 use eyre::Result;
 use once_cell::sync::Lazy;
 
-use crate::{constant::CACHE_DIR, external::beatsaver::map::MapDetail, interface::level::Level};
+use crate::{
+    constant::CACHE_DIR, external::beatsaver::map::MapDetail, interface::level::LevelInfo,
+};
 
 /// # Cache types
 ///
@@ -20,16 +22,16 @@ pub struct Cache(opendal::Operator);
 
 impl Cache {
     /// [get] hash -> level
-    pub async fn get_level_by_hash(&self, hash: &str) -> Result<Level> {
+    pub async fn get_level_by_hash(&self, hash: &str) -> Result<LevelInfo> {
         let hash = hash.to_string();
         let key = format!("level/data/{}", hash);
         let res = self.0.read(&key).await?;
-        let level: Level = serde_json::from_slice(&res)?;
+        let level: LevelInfo = serde_json::from_slice(&res)?;
         Ok(level)
     }
     /// [set] hash -> level
-    pub async fn set_level(&self, level: &Level) -> Result<()> {
-        let hash = level.hash.to_string();
+    pub async fn set_level(&self, hash: &str, level: &LevelInfo) -> Result<()> {
+        let hash = hash.to_string();
         let key = format!("level/data/{}", hash);
         let value = serde_json::to_vec(level)?;
         self.0.write(&key, value).await?;
@@ -47,9 +49,9 @@ impl Cache {
         Ok(hash)
     }
     /// [get] dirname -> level
-    pub async fn get_level_by_dirname(&self, dirname: &str) -> Result<Level> {
+    pub async fn get_level_by_dirname(&self, dirname: &str) -> Result<(LevelInfo, String)> {
         let hash = self.get_level_hash_by_dirname(dirname).await?;
-        self.get_level_by_hash(&hash).await
+        Ok((self.get_level_by_hash(&hash).await?, hash))
     }
     /// [set] dirname -> hash
     pub async fn set_level_hash_by_dirname(&self, dirname: &str, hash: &str) -> Result<()> {

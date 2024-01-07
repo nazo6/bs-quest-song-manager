@@ -26,7 +26,7 @@ export function AddPlaylist() {
           className="px-2"
         >
           <IconPlus className="size-5 flex-shrink-0" />
-          <p>Add level</p>
+          <p>Add playlist</p>
         </Button>
       </Popover.Target>
       <Popover.Dropdown className="shadow-xl bg-gray-200 dark:bg-gray-800">

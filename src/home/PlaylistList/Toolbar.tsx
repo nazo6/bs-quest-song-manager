@@ -1,6 +1,6 @@
 import { Chip } from "@mantine/core";
-import { SelectedPlaylist } from "..";
 import { AddPlaylist } from "./AddPlaylist";
+import { SelectedPlaylist, SpecialPlaylist } from "../selectedPlaylist";
 
 export function Toolbar(props: {
   selectedPlaylist: SelectedPlaylist;
@@ -9,13 +9,13 @@ export function Toolbar(props: {
   return (
     <div className="flex gap-3">
       <Chip
-        checked={props.selectedPlaylist === "noPlaylist"}
+        checked={props.selectedPlaylist === SpecialPlaylist.NoPlaylist}
         size="xs"
         onClick={() => {
-          if (props.selectedPlaylist === "noPlaylist") {
-            props.setSelectedPlaylist(null);
+          if (props.selectedPlaylist === SpecialPlaylist.NoPlaylist) {
+            props.setSelectedPlaylist(SpecialPlaylist.All);
           } else {
-            props.setSelectedPlaylist("noPlaylist");
+            props.setSelectedPlaylist(SpecialPlaylist.NoPlaylist);
           }
         }}
       >

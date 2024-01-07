@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Level, isSuccess, query } from "../../typeUtils";
 import { PlaylistInfo, Song } from "../../bindings";
 import { useMemo } from "react";
-import { SelectedPlaylist } from "..";
+import { SelectedPlaylist, SpecialPlaylist } from "../selectedPlaylist";
 
 export type MaybeMissingLevel =
   | {
@@ -33,7 +33,7 @@ export function useExtendedPlaylist(
     playlistsRes && isSuccess(playlistsRes) ? playlistsRes.data : {};
 
   const playlist = useMemo(() => {
-    if (selectedPlaylist === "noPlaylist") {
+    if (selectedPlaylist === SpecialPlaylist.NoPlaylist) {
       const hashs = new Set(Object.keys(levels));
       for (const playlist of Object.values(playlists)) {
         for (const song of playlist.info.songs) {
@@ -70,7 +70,7 @@ export function useExtendedPlaylist(
         },
         extendedLevels,
       } satisfies ExtendedPlaylist;
-    } else if (selectedPlaylist !== null && playlists[selectedPlaylist]) {
+    } else if (playlists[selectedPlaylist]) {
       const extendedLevels: MaybeMissingLevel[] = playlists[
         selectedPlaylist
       ]!.info.songs.map((song, index) => {

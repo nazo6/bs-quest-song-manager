@@ -33,7 +33,7 @@ export function SelectToolbar({
         className="flex gap-2 px-2"
         onClick={async () => {
           const promises = selected.rows.map((r) => {
-            //todo
+            deletePlaylist(r.original.hash);
           });
           await Promise.all(promises);
           table.resetRowSelection();
