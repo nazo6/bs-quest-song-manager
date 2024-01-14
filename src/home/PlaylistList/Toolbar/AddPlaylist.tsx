@@ -2,7 +2,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import { Button, Input, Popover } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-import { useAddPlaylistFromUrl } from "../../lib/useAddPlaylist";
+import { useAddPlaylistFromUrl } from "@/lib/useAddPlaylist";
 
 export function AddPlaylist() {
   const [opened, { close: closeDialog, toggle }] = useDisclosure(false);

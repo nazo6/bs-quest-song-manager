@@ -1,8 +1,12 @@
+use std::io::Read;
+
 use eyre::Result;
 use once_cell::sync::Lazy;
 
 use crate::{
-    constant::CACHE_DIR, external::beatsaver::map::MapDetail, interface::level::LevelInfo,
+    constant::CACHE_DIR,
+    external::beatsaver::map::MapDetail,
+    interface::{dump::LevelDumpInfo, level::LevelInfo},
 };
 
 /// # Cache types
@@ -18,6 +22,9 @@ use crate::{
 /// ## Remote level info
 /// - hash -> remote level info
 ///     Additional level info fetched from beatsaver.
+///
+/// ## Beatsaver dump data (https://github.com/andruzzzhka/BeatSaberScrappedData)
+/// Regulary updated data from beatsaver. Contains basic level info and stats.
 pub struct Cache(opendal::Operator);
 
 impl Cache {
@@ -96,6 +103,52 @@ impl Cache {
     pub async fn set_remote_level(&self, hash: &str, level: &MapDetail) -> Result<()> {
         let hash = hash.to_string();
         let key = format!("level-remote/data/{}", hash);
+        let value = serde_json::to_vec(level)?;
+        self.0.write(&key, value).await?;
+        Ok(())
+    }
+}
+
+static DUMP_URL: &str = "https://raw.githubusercontent.com/andruzzzhka/BeatSaberScrappedData/master/combinedScrappedData.zip";
+
+impl Cache {
+    pub async fn get_dump_updated(&self) -> Result<String> {
+        let res = self.0.read("level-dump/updated").await?;
+        let str = String::from_utf8(res)?;
+        Ok(str)
+    }
+    pub async fn update_dump(&self) -> Result<()> {
+        let dump_bytes = reqwest::get(DUMP_URL).await?.bytes().await?;
+        let dump_json_str = tokio::task::spawn_blocking(move || {
+            let dump_zip = std::io::Cursor::new(dump_bytes);
+            let mut dump_zip = zip::ZipArchive::new(dump_zip)?;
+            let mut dump_file = dump_zip.by_name("combinedScrappedData.json")?;
+            let mut dump_json_str = String::new();
+            dump_file.read_to_string(&mut dump_json_str).unwrap();
+            Ok::<_, eyre::Report>(dump_json_str)
+        })
+        .await
+        .unwrap()?;
+        let dump_raw: Vec<LevelDumpInfo> = serde_json::from_str(&dump_json_str)?;
+        for mut level in dump_raw {
+            level.hash = level.hash.to_lowercase();
+            self.set_dump(&level.hash, &level).await?;
+        }
+        let current_time = chrono::Local::now().to_rfc3339();
+        self.0.write("level-dump/updated", current_time).await?;
+        Ok(())
+    }
+
+    pub async fn get_dump_by_hash(&self, hash: &str) -> Result<LevelDumpInfo> {
+        let hash = hash.to_string();
+        let key = format!("level-dump/data/{}", hash);
+        let res = self.0.read(&key).await?;
+        let level: LevelDumpInfo = serde_json::from_slice(&res)?;
+        Ok(level)
+    }
+    pub async fn set_dump(&self, hash: &str, level: &LevelDumpInfo) -> Result<()> {
+        let hash = hash.to_string();
+        let key = format!("level-dump/data/{}", hash);
         let value = serde_json::to_vec(level)?;
         self.0.write(&key, value).await?;
         Ok(())

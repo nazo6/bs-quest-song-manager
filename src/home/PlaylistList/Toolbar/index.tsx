@@ -1,6 +1,6 @@
 import { Chip } from "@mantine/core";
 import { AddPlaylist } from "./AddPlaylist";
-import { SelectedPlaylist, SpecialPlaylist } from "../selectedPlaylist";
+import { SelectedPlaylist, SpecialPlaylist } from "../../selectedPlaylist";
 
 export function Toolbar(props: {
   selectedPlaylist: SelectedPlaylist;

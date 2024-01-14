@@ -1,8 +1,4 @@
-use tauri::{
-    http::{Response, ResponseBuilder},
-    plugin::TauriPlugin,
-    Wry,
-};
+use tauri::{http::ResponseBuilder, plugin::TauriPlugin, Wry};
 
 use crate::interface::{scan::ScanEvent, DeepLinkEvent};
 
@@ -13,6 +9,8 @@ mod state;
 pub fn specta_plugin() -> TauriPlugin<Wry> {
     let specta_builder = tauri_specta::ts::builder()
         .commands(tauri_specta::collect_commands![
+            command::cache::cache_dump_get,
+            command::cache::cache_dump_update,
             command::config::config_get,
             command::config::config_reset,
             command::config::config_set_mod_root,
@@ -52,7 +50,7 @@ pub async fn build() -> tauri::Builder<Wry> {
         // in default asset protocol, rclone mounted volume cause issue that scope is not allowed.
         // So, instead of using default asset protocol, we use custom protocol.
         // However, this handler is blocking and slow...
-        .register_uri_scheme_protocol("asset2", |app, req| {
+        .register_uri_scheme_protocol("asset2", |_app, req| {
             let Ok(url) = url::Url::parse(req.uri()) else {
                 return ResponseBuilder::new()
                     .status(400)

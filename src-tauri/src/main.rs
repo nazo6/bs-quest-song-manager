@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use cache::CACHE;
 use tracing_subscriber::prelude::*;
 
 mod app;
@@ -30,6 +31,19 @@ async fn main() {
         tracing_subscriber::fmt()
             .with_max_level(tracing::Level::INFO)
             .init();
+    }
+
+    if CACHE.get_dump_updated().await.is_err() {
+        tauri::api::dialog::MessageDialogBuilder::new("Setup", "Downloading data. Please wait...")
+            .show(|_| {});
+        if let Err(e) = CACHE.update_dump().await {
+            tauri::api::dialog::blocking::MessageDialogBuilder::new(
+                "Setup",
+                format!("Failed to download data. Error: {}", e),
+            )
+            .show();
+            return;
+        }
     }
 
     #[cfg(target_os = "windows")]

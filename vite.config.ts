@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 const reactDevtoolsInject = () => {
   return {
@@ -18,6 +19,7 @@ export default defineConfig(async (env) => {
     plugins: [
       react(),
       env.mode === "development" ? reactDevtoolsInject() : null,
+      tsconfigPaths({ root: "./" }),
     ],
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

@@ -22,7 +22,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "resolvePackageJsonExports": false,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
   },
   "include": [
     "src"

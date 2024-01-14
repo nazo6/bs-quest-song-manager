@@ -1,5 +1,5 @@
 import { Badge, Button, Title } from "@mantine/core";
-import { MaybeImage, levelHashImageUrl } from "../../components/Image";
+import { MaybeImage } from "../../components/Image";
 import { MaybeMissingLevel } from "./useExtendedPlaylist";
 import { useQuery } from "@tanstack/react-query";
 import { commands } from "../../bindings";
@@ -10,9 +10,9 @@ export function DetailPanel({
   row,
   isOpen,
 }: { row: MaybeMissingLevel; isOpen: boolean }) {
-  const { data: remoteInfo, isLoading } = useQuery({
-    queryFn: () => commands.levelFetchRemote(row.song.hash),
-    queryKey: ["levelFetchRemote", row.song.hash],
+  const { data: dumpInfo, isLoading } = useQuery({
+    queryFn: () => commands.cacheDumpGet(row.song.hash),
+    queryKey: ["cacheDumpGet", row.song.hash],
     enabled: isOpen,
   });
 
@@ -21,10 +21,8 @@ export function DetailPanel({
   let imageUrl: string | null = null;
   if (level?.image_path) {
     imageUrl = convertFileSrc(level.image_path, "asset2");
-  } else if (remoteInfo && isSuccess(remoteInfo)) {
-    const latestVersion =
-      remoteInfo.data.versions[remoteInfo.data.versions.length - 1];
-    imageUrl = latestVersion?.coverURL ?? null;
+  } else if (dumpInfo && isSuccess(dumpInfo)) {
+    imageUrl = `https://cdn.beatsaver.com/${row.song.hash}.jpg`;
   }
 
   // const imageUrl = levelHashImageUrl(row.song.hash);
@@ -54,17 +52,15 @@ export function DetailPanel({
               <div className="col-span-4 break-all">{level.path}</div>
             </>
           )}
-          {isLoading ? (
-            <div className="col-span-5 text-center">Loading beatsaver...</div>
-          ) : remoteInfo && isSuccess(remoteInfo) ? (
+          {isLoading ? null : dumpInfo && isSuccess(dumpInfo) ? (
             <>
               <div className="col-span-1">Beatsaver id</div>
               <div className="col-span-4 break-all flex gap-2 items-center">
-                {remoteInfo.data.id}
+                {dumpInfo.data.Key}
                 <Button
                   component="a"
                   variant="outline"
-                  href={`https://beatsaver.com/maps/${remoteInfo.data.id}`}
+                  href={`https://beatsaver.com/maps/${dumpInfo.data.Key}`}
                   target="_blank"
                   rel="noreferrer"
                   className="ml-2"
@@ -75,7 +71,7 @@ export function DetailPanel({
                 <Button
                   component="a"
                   variant="outline"
-                  href={`https://bsaber.com/songs/${remoteInfo.data.id}`}
+                  href={`https://bsaber.com/songs/${dumpInfo.data.Key}`}
                   target="_blank"
                   rel="noreferrer"
                   className="ml-2"
@@ -87,7 +83,7 @@ export function DetailPanel({
             </>
           ) : (
             <div className="col-span-5 text-center">
-              Loading beatsaver failed: {remoteInfo?.error ?? "Unknown error"}
+              Loading dump data failed: {dumpInfo?.error ?? "Unknown error"}
             </div>
           )}
         </div>

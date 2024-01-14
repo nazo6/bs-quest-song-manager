@@ -1,10 +1,11 @@
 use super::state::AppState;
 
+pub mod cache;
 pub mod config;
 pub mod level;
+pub mod misc;
 pub mod playlist;
 pub mod scan;
-pub mod misc;
 
 pub type State<'a> = tauri::State<'a, AppState>;
 

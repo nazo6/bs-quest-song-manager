@@ -1,10 +1,10 @@
 import { Button, Checkbox, Input, Popover, Tooltip } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
-import { useDownloadQueueContext } from "../../components/DownloadQueueContext";
+import { useDownloadQueueContext } from "@/components/DownloadQueueContext";
 import { useState } from "react";
-import { ExtendedPlaylist } from "./useExtendedPlaylist";
-import { SelectedPlaylist } from "../selectedPlaylist";
+import { ExtendedPlaylist } from "../useExtendedPlaylist";
+import { SelectedPlaylist } from "@/home/selectedPlaylist";
 
 export function AddLevel(props: {
   selectedPlaylist: SelectedPlaylist;

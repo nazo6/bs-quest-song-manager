@@ -1,4 +1,5 @@
 pub mod config;
+pub mod dump;
 pub mod level;
 pub mod playlist;
 pub mod scan;

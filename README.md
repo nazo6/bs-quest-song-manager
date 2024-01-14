@@ -2,8 +2,6 @@
 
 App to manage songs for the Beat Saber Quest.
 
-**This app is very early in development and not usable yet.**
-
 ## Usage
 
 This app does not use adb. You have to mount android storage to pc.
@@ -22,6 +20,6 @@ Termux can also be used to mount android storage to pc using sftp.
 
 - [x] Load playlist and songs
 - [x] Download missing songs in playlist
-- [ ] Add songs
-- [ ] Delete songs
+- [x] Add songs
+- [x] Delete songs
 - [ ] Edit playlist

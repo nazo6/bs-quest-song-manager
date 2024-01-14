@@ -81,6 +81,7 @@ pub async fn install_level_by_id(root_dir: &ModRoot, id: &str) -> eyre::Result<L
                 .versions
                 .pop()
                 .ok_or_else(|| eyre::eyre!("Failed to get last version of map {}", res.id))?;
+            CACHE.set_level_hash_by_id(id, &version.hash).await?;
             (
                 format!("https://cdn.beatsaver.com/{}.zip", version.hash),
                 version.hash,
