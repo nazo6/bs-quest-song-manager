@@ -33,14 +33,14 @@ impl Cache {
         let hash = hash.to_string();
         let key = format!("level/data/{}", hash);
         let res = self.0.read(&key).await?;
-        let level: LevelInfo = serde_json::from_slice(&res)?;
+        let level: LevelInfo = bincode::deserialize(&res)?;
         Ok(level)
     }
     /// [set] hash -> level
     pub async fn set_level(&self, hash: &str, level: &LevelInfo) -> Result<()> {
         let hash = hash.to_string();
         let key = format!("level/data/{}", hash);
-        let value = serde_json::to_vec(level)?;
+        let value = bincode::serialize(level)?;
         self.0.write(&key, value).await?;
         Ok(())
     }
@@ -96,14 +96,14 @@ impl Cache {
         let hash = hash.to_string();
         let key = format!("level-remote/data/{}", hash);
         let res = self.0.read(&key).await?;
-        let level: MapDetail = serde_json::from_slice(&res)?;
+        let level: MapDetail = bincode::deserialize(&res)?;
         Ok(level)
     }
     /// [set] hash -> level
     pub async fn set_remote_level(&self, hash: &str, level: &MapDetail) -> Result<()> {
         let hash = hash.to_string();
         let key = format!("level-remote/data/{}", hash);
-        let value = serde_json::to_vec(level)?;
+        let value = bincode::serialize(level)?;
         self.0.write(&key, value).await?;
         Ok(())
     }
@@ -143,13 +143,13 @@ impl Cache {
         let hash = hash.to_string();
         let key = format!("level-dump/data/{}", hash);
         let res = self.0.read(&key).await?;
-        let level: LevelDumpInfo = serde_json::from_slice(&res)?;
+        let level: LevelDumpInfo = bincode::deserialize(&res)?;
         Ok(level)
     }
     pub async fn set_dump(&self, hash: &str, level: &LevelDumpInfo) -> Result<()> {
         let hash = hash.to_string();
         let key = format!("level-dump/data/{}", hash);
-        let value = serde_json::to_vec(level)?;
+        let value = bincode::serialize(level)?;
         self.0.write(&key, value).await?;
         Ok(())
     }
